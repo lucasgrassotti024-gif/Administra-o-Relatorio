@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planilha — Relatórios de Campo</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --primary:#2563eb;
+  --accent:#1d4ed8;
+  --bg:#f3f6fb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --shadow-soft:0 10px 30px rgba(15,23,42,0.10);
+  --shadow-hard:0 18px 45px rgba(15,23,42,0.20);
+
+  --sidebar-bg:#ffffff;
+  --sidebar-text:#111827;
+  --sidebar-link:#111827;
+
+  /* NOVOS: para tabela */
+  --table-header-bg:rgba(37,99,235,0.06);
+  --table-header-border:#cbd5f5;
+  --table-row-alt:rgba(15,23,42,0.015);
+}
+.dark {
+  --bg:#020617;
+  --card:#020617;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --border:#111827;
+  --shadow-soft:0 10px 30px rgba(0,0,0,0.60);
+  --shadow-hard:0 18px 45px rgba(0,0,0,0.80);
+
+  --sidebar-bg:#020617;
+  --sidebar-text:#e5e7eb;
+  --sidebar-link:#e5e7eb;
+
+  --table-header-bg:rgba(15,23,42,0.92);
+  --table-header-border:#1e293b;
+  --table-row-alt:rgba(15,23,42,0.45);
+}
+
+*{
+  box-sizing:border-box;
+  font-family:"Inter",sans-serif;
+  transition:background-color .25s ease,color .25s ease,border-color .25s ease;
+}
+
+/* FUNDO */
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+}
+
+/* SIDEBAR (igual dashboard) */
+.sidebar{
+  width:230px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-text);
+  display:flex;
+  flex-direction:column;
+  padding:14px 12px;
+  gap:14px;
+  position:fixed;
+  inset-block:0;
+  left:0;
+  z-index:40;
+  box-shadow:var(--shadow-hard);
+  transform:translateX(-100%);
+  transition:transform .25s ease, background-color .25s ease, color .25s ease;
+}
+body.sidebar-open .sidebar{
+  transform:translateX(0);
+}
+.sidebar-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.sidebar-title-block{
+  display:flex;
+  flex-direction:column;
+}
+.sidebar-title{
+  font-family:"Outfit";
+  font-weight:800;
+  font-size:1.0rem;
+}
+.sidebar-sub{
+  font-size:.72rem;
+  color:var(--muted);
+}
+.sidebar-toggle-theme{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:1px solid rgba(148,163,184,0.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:transparent;
+  font-size:1rem;
+  color:var(--sidebar-text);
+}
+.sidebar-nav{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.sidebar-link{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 9px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:.85rem;
+  color:var(--sidebar-link);
+  cursor:pointer;
+}
+.sidebar-link span.icon{width:18px;text-align:center;}
+.sidebar-link:hover,
+.sidebar-link.active{
+  background:rgba(37,99,235,0.15);
+}
+.sidebar-footer{
+  margin-top:auto;
+  font-size:.7rem;
+  color:var(--muted);
+  border-top:1px solid rgba(148,163,184,0.3);
+  padding-top:8px;
+}
+
+/* BOTÃO FLOANTE SIDEBAR */
+.sidebar-handle{
+  position:fixed;
+  top:14px;
+  left:10px;
+  z-index:45;
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  background:#2563eb;
+  color:#f9fafb;
+  box-shadow:0 8px 20px rgba(37,99,235,0.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+}
+
+/* MAIN WRAPPER */
+.main-wrapper{
+  flex:1;
+  min-height:100vh;
+  padding:18px 20px 24px;
+  display:flex;
+  flex-direction:column;
+}
+@media(max-width:900px){
+  .main-wrapper{
+    padding-top:56px;
+  }
+}
+
+/* TOPBAR MOBILE */
+.topbar-mobile{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:48px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:"Outfit";
+  font-weight:700;
+  font-size:.9rem;
+  z-index:30;
+}
+@media(min-width:901px){
+  .topbar-mobile{display:none;}
+}
+
+/* HEADER */
+.page-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:12px;
+  margin-bottom:10px;
+}
+.page-title{
+  font-family:"Outfit";
+  font-weight:800;
+  font-size:1.4rem;
+}
+.page-sub{
+  font-size:.8rem;
+  color:var(--muted);
+}
+
+/* AÇÕES ACIMA DA TABELA */
+.table-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:6px;
+  margin-bottom:4px;
+  align-items:center;
+}
+.table-actions button{
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--card);
+  font-size:.78rem;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.table-actions button.primary{
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:#f9fafb;
+  border:none;
+  box-shadow:var(--shadow-soft);
+}
+
+/* WRAPPER DA TABELA (drag-scroll) */
+.table-wrapper{
+  margin-top:12px;
+  background:var(--card);
+  border-radius:18px;
+  box-shadow:var(--shadow-soft);
+  border:1px solid var(--table-header-border); /* mais visível */
+  padding:12px;
+  overflow:auto;
+  cursor:grab;
+}
+.table-wrapper.dragging{
+  cursor:grabbing;
+}
+
+/* TABELA */
+table{
+  border-collapse:collapse;
+  min-width:900px;
+  background:var(--card);
+}
+thead{
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:var(--table-header-bg);
+  box-shadow:0 2px 4px rgba(15,23,42,0.08);
+}
+th,td{
+  border:1px solid var(--border);
+  padding:6px 8px;
+  font-size:.8rem;
+  white-space:nowrap;
+}
+th{
+  background:var(--table-header-bg);
+  border-bottom:1px solid var(--table-header-border);
+  font-weight:700;
+  text-align:left;
+}
+th.filterable{
+  padding:0;
+}
+.th-inner-btn{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding:6px 8px;
+  width:100%;
+  background:transparent;
+  border:none;
+  font-size:.78rem;
+  font-weight:700;
+  cursor:pointer;
+  color:var(--text);
+}
+.th-inner-btn span.chevron{
+  font-size:.7rem;
+}
+
+/* LINHAS ZEBRADAS + HOVER */
+tbody tr:nth-child(even){
+  background:var(--table-row-alt);
+}
+tbody tr:hover{
+  background:rgba(37,99,235,0.06);
+}
+
+/* CÉLULAS EDITÁVEIS */
+td[contenteditable="true"]{
+  background:rgba(37,99,235,0.02);
+}
+td[contenteditable="true"]:focus{
+  outline:2px solid rgba(37,99,235,0.7);
+  background:rgba(37,99,235,0.08);
+}
+
+/* COLUNAS AVANÇADAS (escondidas por padrão) */
+.advanced-col{
+  display:none;
+}
+body.show-advanced .advanced-col{
+  display:table-cell;
+}
+
+/* PAINEL DE FILTRO POR COLUNA */
+#colFilterPanel{
+  position:fixed;
+  top:70px;
+  right:20px;
+  width:220px;
+  background:var(--card);
+  border-radius:12px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow-soft);
+  padding:8px;
+  display:none;
+  z-index:60;
+}
+#colFilterPanel.open{
+  display:block;
+}
+#colFilterTitle{
+  font-size:.8rem;
+  font-weight:600;
+  margin-bottom:4px;
+}
+#colFilterList{
+  max-height:210px;
+  overflow:auto;
+  margin-bottom:6px;
+}
+.col-option{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:.78rem;
+  padding:2px 0;
+}
+.col-option input{
+  width:14px;
+  height:14px;
+}
+#colFilterActions{
+  display:flex;
+  gap:6px;
+}
+#applyColFilter,#clearColFilter{
+  flex:1;
+  padding:5px 6px;
+  border-radius:8px;
+  border:none;
+  font-size:.75rem;
+  font-weight:600;
+  cursor:pointer;
+}
+#applyColFilter{
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:#f9fafb;
+}
+#clearColFilter{
+  background:rgba(15,23,42,0.04);
+  color:var(--text);
+}
+
+/* RODAPÉ */
+footer{
+  margin-top:10px;
+  font-size:.75rem;
+  color:var(--muted);
+  text-align:center;
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title-block">
+      <span class="sidebar-title">Relatórios de Campo</span>
+      <span class="sidebar-sub">CMPC • RSS3</span>
+    </div>
+    <button id="themeToggle" class="sidebar-toggle-theme" type="button">🌙</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="admin.html" class="sidebar-link">
+      <span class="icon">📋</span><span>Admin</span>
+    </a>
+    <a href="dashboard.html" class="sidebar-link">
+      <span class="icon">📊</span><span>Dashboard</span>
+    </a>
+    <a href="planilha.html" class="sidebar-link active">
+      <span class="icon">📑</span><span>Planilha</span>
+    </a>
+    <a href="oleo-ibcs.html" class="sidebar-link">
+      <span class="icon">🛢️</span><span>Óleo em IBCs</span>
+    </a>
+    <a href="excluidos.html" class="sidebar-link">
+      <span class="icon">🗑️</span><span>Excluídos</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    Planilha dinâmica com filtros<br>e edição rápida.
+  </div>
+</aside>
+
+<button id="sidebarHandle" class="sidebar-handle" type="button">☰</button>
+
+<div class="topbar-mobile">Planilha — Relatórios</div>
+
+<!-- PAINEL DE FILTRO POR COLUNA -->
+<div id="colFilterPanel">
+  <div id="colFilterTitle">Filtrar</div>
+  <div id="colFilterList"></div>
+  <div id="colFilterActions">
+    <button type="button" id="clearColFilter">Limpar</button>
+    <button type="button" id="applyColFilter">Aplicar</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-wrapper">
+  <header class="page-header">
+    <div>
+      <div class="page-title">Planilha de Relatórios</div>
+      <div class="page-sub" id="subtitleInfo">Carregando dados...</div>
+    </div>
+  </header>
+
+  <!-- AÇÕES DA PLANILHA -->
+  <div class="table-actions">
+    <button type="button" id="btnToggleAdvanced">
+      <span id="labelAdvanced">Mostrar colunas avançadas</span>
+    </button>
+    <button type="button" class="primary" id="btnExportCsv">
+      Exportar CSV
+    </button>
+  </div>
+
+  <div class="table-wrapper" id="tableWrapper">
+    <table id="sheetTable">
+      <thead>
+        <tr id="sheetHeaderRow">
+          <!-- cabeçalho montado via JS -->
+        </tr>
+      </thead>
+      <tbody id="sheetBody">
+        <!-- linhas montadas via JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    © 2025 | Relatórios de Campo — Planilha
+  </footer>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCxI5gx0LS0ny2y6UnPUCyW0zf1BjnTSco",
+  authDomain: "checklist-rss3.firebaseapp.com",
+  projectId: "checklist-rss3",
+  storageBucket: "checklist-rss3.appspot.com",
+  messagingSenderId: "179261205524",
+  appId: "1:179261205524:web:376152c3b94fb115f14b01",
+  measurementId: "G-47CPMQ3ZTC"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
+<script>
+// Proteção básica (comente o redirect se não quiser)
+if(localStorage.getItem("auth_relatorios")!=="true"){
+  // window.location.href="index.html";
+}
+
+/* Tema */
+const themeToggle=document.getElementById("themeToggle");
+if(localStorage.getItem("tema")==="dark"){
+  document.body.classList.add("dark");
+  themeToggle.textContent="☀️";
+}
+themeToggle.onclick=()=>{
+  document.body.classList.toggle("dark");
+  const dark=document.body.classList.contains("dark");
+  themeToggle.textContent=dark?"☀️":"🌙";
+  localStorage.setItem("tema",dark?"dark":"light");
+};
+
+/* Sidebar */
+const sidebarHandle=document.getElementById("sidebarHandle");
+sidebarHandle.addEventListener("click",()=>{
+  document.body.classList.toggle("sidebar-open");
+});
+</script>
+
+<script>
+const tableWrapper=document.getElementById("tableWrapper");
+const sheetHeaderRow=document.getElementById("sheetHeaderRow");
+const sheetBody=document.getElementById("sheetBody");
+const subtitleInfo=document.getElementById("subtitleInfo");
+
+const btnToggleAdvanced=document.getElementById("btnToggleAdvanced");
+const labelAdvanced=document.getElementById("labelAdvanced");
+const btnExportCsv=document.getElementById("btnExportCsv");
+let advancedVisible=false;
+
+// drag-scroll horizontal
+let isDown=false,startX,scrollLeft;
+tableWrapper.addEventListener("mousedown",(e)=>{
+  if(e.target.closest('td[contenteditable="true"]')) return;
+  isDown=true;
+  tableWrapper.classList.add("dragging");
+  startX=e.pageX - tableWrapper.offsetLeft;
+  scrollLeft=tableWrapper.scrollLeft;
+});
+tableWrapper.addEventListener("mouseleave",()=>{isDown=false;tableWrapper.classList.remove("dragging");});
+tableWrapper.addEventListener("mouseup",()=>{isDown=false;tableWrapper.classList.remove("dragging");});
+tableWrapper.addEventListener("mousemove",(e)=>{
+  if(!isDown) return;
+  e.preventDefault();
+  const x=e.pageX - tableWrapper.offsetLeft;
+  const walk=x-startX;
+  tableWrapper.scrollLeft = scrollLeft - walk;
+});
+
+// touch
+tableWrapper.addEventListener("touchstart",(e)=>{
+  if(e.target.closest('td[contenteditable="true"]')) return;
+  isDown=true;
+  tableWrapper.classList.add("dragging");
+  startX=e.touches[0].pageX - tableWrapper.offsetLeft;
+  scrollLeft=tableWrapper.scrollLeft;
+},{passive:true});
+tableWrapper.addEventListener("touchend",()=>{isDown=false;tableWrapper.classList.remove("dragging");});
+tableWrapper.addEventListener("touchmove",(e)=>{
+  if(!isDown) return;
+  const x=e.touches[0].pageX - tableWrapper.offsetLeft;
+  const walk=x-startX;
+  tableWrapper.scrollLeft = scrollLeft - walk;
+},{passive:true});
+
+/* ===== Helpers de duração ===== */
+function formatMinutesAsHhMm(min){
+  const n=parseInt(min,10);
+  if(isNaN(n) || n < 0) return "";
+  const h=Math.floor(n/60);
+  const m=n%60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+function parseDurationInputToMinutes(str){
+  if(!str) return null;
+  str=str.trim();
+  // se vier no formato hh:mm
+  if(str.includes(":")){
+    const parts=str.split(":");
+    if(parts.length<2) return null;
+    const h=parseInt(parts[0],10);
+    const m=parseInt(parts[1],10);
+    if(isNaN(h)||isNaN(m)||h<0||m<0||m>=60) return null;
+    return h*60+m;
+  }
+  // se o usuário digitar só minutos "310"
+  const n=parseInt(str,10);
+  if(isNaN(n) || n<0) return null;
+  return n;
+}
+
+/* ===== Definição de colunas ===== */
+const columns=[
+  {key:"numeroPT",            label:"Nº PT",                 editable:false},
+  {key:"data",                label:"Data",                  editable:true},
+  {key:"diaSemana",           label:"Dia Semana",            editable:false},
+  {key:"equipamento",         label:"Equipamento",           editable:true},
+  {key:"placa",               label:"Placa",                 editable:true},
+  {key:"local",               label:"Local",                 editable:true},
+  {key:"tag",                 label:"Tag",                   editable:true},
+  {key:"solicitante",         label:"Solicitante",           editable:true},
+  {key:"emitenteAbertura",    label:"Emitente Abertura",     editable:true},
+  {key:"emitenteEncerramento",label:"Emitente Encerr.",      editable:true},
+  {key:"operador",            label:"Operador",              editable:true},
+  {key:"ajudante",            label:"Ajudante",              editable:true},
+  {key:"tipoServico",         label:"Tipo Serviço",          editable:true},
+
+  {key:"h_ddsChecklist",      label:"DDS/Checklist",         editable:true},
+  {key:"h_disposicao",        label:"Disp. Coordenação",     editable:true},
+  {key:"h_chegada",           label:"Chegada Local",         editable:true},
+  {key:"h_liberacaoPT",       label:"Liberação PT",          editable:true},
+  {key:"h_inicio",            label:"Início Atividade",      editable:true},
+  {key:"h_fim",               label:"Fim Atividade",         editable:true},
+  {key:"h_inicioIntervalo",   label:"Início Intervalo",      editable:true},
+  {key:"h_fimIntervalo",      label:"Fim Intervalo",         editable:true},
+  {key:"h_trocaTurno",        label:"Troca Turno",           editable:true},
+
+  {key:"tipoAtividade",       label:"Tipo Atividade",        editable:true},
+  {key:"oleo",                label:"Óleo",                  editable:true},
+  {key:"quantidade",          label:"Qtd Óleo",              editable:true},
+
+  {key:"encerramentoPt",      label:"Encerramento PT",       editable:true},
+  {key:"motivoNaoFinalizada", label:"Motivo Não Finalizada", editable:true},
+
+  {key:"duracaoMinutos",      label:"Duração (hh:mm)",       editable:true},
+
+  {key:"observacoes",         label:"Observações",           editable:true},
+
+  {key:"criadoEm",            label:"Criado em",             editable:false},
+  {key:"deviceId",            label:"Device ID",             editable:false, advanced:true},
+  {key:"operadorIdFixo",      label:"Operador ID",           editable:false, advanced:true}
+];
+
+let relatoriosRaw=[];
+let relatoriosFiltrados=[];
+let activeFilters={};
+
+/* ===== Painel único de filtro por coluna ===== */
+const colFilterPanel=document.getElementById("colFilterPanel");
+const colFilterTitle=document.getElementById("colFilterTitle");
+const colFilterList=document.getElementById("colFilterList");
+const applyColFilter=document.getElementById("applyColFilter");
+const clearColFilter=document.getElementById("clearColFilter");
+
+let currentFilterCol=null;
+
+function openFilterPanelFor(colKey){
+  currentFilterCol=colKey;
+  const colConf=columns.find(c=>c.key===colKey);
+  colFilterTitle.textContent=`Filtrar: ${colConf ? colConf.label : colKey}`;
+
+  const valuesSet=new Set();
+  relatoriosRaw.forEach(r=>{
+    const v = r[colKey] ?? "";
+    valuesSet.add(String(v || "").trim());
+  });
+  const allValues=Array.from(valuesSet).sort((a,b)=>a.localeCompare(b));
+
+  const selectedSet = activeFilters[colKey] || new Set();
+
+  colFilterList.innerHTML="";
+  if(allValues.length===0){
+    colFilterList.innerHTML='<div style="font-size:.78rem;color:var(--muted);">Sem valores.</div>';
+  }else{
+    allValues.forEach(val=>{
+      const label=document.createElement("label");
+      label.className="col-option";
+      const checked = selectedSet.size===0 || selectedSet.has(val);
+      label.innerHTML=`
+        <input type="checkbox" data-value="${val.replace(/"/g,'&quot;')}" ${checked?"checked":""}>
+        <span>${val || "(vazio)"}</span>
+      `;
+      colFilterList.appendChild(label);
+    });
+  }
+
+  colFilterPanel.classList.add("open");
+}
+
+applyColFilter.addEventListener("click",()=>{
+  if(!currentFilterCol){colFilterPanel.classList.remove("open");return;}
+  const checks=colFilterList.querySelectorAll('input[type="checkbox"]');
+  const set=new Set();
+  checks.forEach(ch=>{
+    if(ch.checked){
+      set.add(ch.dataset.value);
+    }
+  });
+  if(set.size===0 || set.size===checks.length){
+    delete activeFilters[currentFilterCol];
+  }else{
+    activeFilters[currentFilterCol]=set;
+  }
+  colFilterPanel.classList.remove("open");
+  aplicarFiltrosEAtualizar();
+});
+
+clearColFilter.addEventListener("click",()=>{
+  if(currentFilterCol){
+    delete activeFilters[currentFilterCol];
+  }
+  colFilterPanel.classList.remove("open");
+  aplicarFiltrosEAtualizar();
+});
+
+window.addEventListener("click",(e)=>{
+  if(!colFilterPanel.contains(e.target)) colFilterPanel.classList.remove("open");
+});
+
+/* ===== Cabeçalho ===== */
+function renderHeader(){
+  sheetHeaderRow.innerHTML="";
+  columns.forEach(col=>{
+    const th=document.createElement("th");
+    th.className="filterable";
+    th.dataset.colkey=col.key;
+    if(col.advanced) th.classList.add("advanced-col");
+    th.innerHTML=`
+      <button type="button" class="th-inner-btn">
+        <span>${col.label}</span>
+        <span class="chevron">▾</span>
+      </button>
+    `;
+    th.querySelector("button").addEventListener("click",(e)=>{
+      e.stopPropagation();
+      openFilterPanelFor(col.key);
+    });
+    sheetHeaderRow.appendChild(th);
+  });
+}
+
+/* ===== Corpo ===== */
+function renderBody(){
+  sheetBody.innerHTML="";
+  relatoriosFiltrados.forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.dataset.id=r.id;
+    columns.forEach(col=>{
+      const td=document.createElement("td");
+      td.dataset.col=col.key;
+      if(col.advanced) td.classList.add("advanced-col");
+
+      let val = r[col.key];
+      if(col.key==="duracaoMinutos"){
+        // mostra sempre hh:mm
+        const n=parseInt(val,10);
+        val = isNaN(n) ? "" : formatMinutesAsHhMm(n);
+      }
+      if(val==null) val="";
+      td.textContent=String(val);
+      if(col.editable){
+        td.contentEditable="true";
+      }
+      tr.appendChild(td);
+    });
+    sheetBody.appendChild(tr);
+  });
+}
+
+/* ===== Filtros ===== */
+function aplicarFiltrosEAtualizar(){
+  relatoriosFiltrados = relatoriosRaw.filter(r=>{
+    for(const [colKey,set] of Object.entries(activeFilters)){
+      if(set && set.size>0){
+        const v=String(r[colKey] ?? "").trim();
+        if(!set.has(v)) return false;
+      }
+    }
+    return true;
+  });
+
+  subtitleInfo.textContent = `${relatoriosFiltrados.length} relatório(s) exibido(s)`;
+  renderBody();
+}
+
+/* ===== Update payload ===== */
+function buildUpdatePayload(colKey,newValue){
+  switch(colKey){
+    case "h_ddsChecklist":    return {"horarios.ddsChecklist": newValue};
+    case "h_disposicao":      return {"horarios.disposicao":   newValue};
+    case "h_chegada":         return {"horarios.chegada":      newValue};
+    case "h_liberacaoPT":     return {"horarios.liberacaoPT":  newValue};
+    case "h_inicio":          return {"horarios.inicio":       newValue};
+    case "h_inicioIntervalo": return {"horarios.inicioIntervalo": newValue};
+    case "h_fimIntervalo":    return {"horarios.fimIntervalo": newValue};
+    case "h_fim":             return {"horarios.fim":          newValue};
+    case "h_trocaTurno":      return {"horarios.trocaTurno":   newValue};
+
+    case "tipoAtividade":
+      return {
+        "tipoAtividade": newValue,
+        "especificacoes.tipoAtividade": newValue
+      };
+    case "oleo":
+      return {
+        "oleo": newValue,
+        "especificacoes.oleo": newValue
+      };
+    case "quantidade":
+      return {
+        "quantidade": newValue,
+        "especificacoes.quantidade": newValue
+      };
+    case "tipoServico":
+      return {
+        "tipoServico": newValue,
+        "especificacoes.tipoServico": newValue
+      };
+
+    case "duracaoMinutos":
+      return {"duracaoMinutos": newValue};
+
+    default:
+      return {[colKey]: newValue};
+  }
+}
+
+/* ===== Edição de células ===== */
+sheetBody.addEventListener("blur",async (e)=>{
+  const td=e.target;
+  if(td.tagName!=="TD" || !td.dataset.col) return;
+  const colKey=td.dataset.col;
+  const colConf=columns.find(c=>c.key===colKey);
+  if(!colConf || !colConf.editable) return;
+
+  const tr=td.closest("tr");
+  const id=tr.dataset.id;
+  let newValue=td.textContent.trim();
+
+  // tratamento especial para duração (HH:MM -> minutos)
+  if(colKey==="duracaoMinutos"){
+    const mins=parseDurationInputToMinutes(newValue);
+    if(mins==null){
+      // inválido: volta para o valor antigo que está em relatoriosRaw
+      const objOld = relatoriosRaw.find(r=>r.id===id);
+      if(objOld){
+        td.textContent = formatMinutesAsHhMm(objOld.duracaoMinutos);
+      }
+      return;
+    }
+    newValue = mins;
+    td.textContent = formatMinutesAsHhMm(mins);
+  }
+
+  try{
+    const updatePayload = buildUpdatePayload(colKey,newValue);
+    await db.collection("relatoriosCampo").doc(id).update(updatePayload);
+
+    const obj=relatoriosRaw.find(r=>r.id===id);
+    if(obj) obj[colKey]=newValue;
+
+    aplicarFiltrosEAtualizar();
+  }catch(err){
+    console.error("Erro ao atualizar campo:",err);
+    td.style.background="rgba(220,38,38,0.15)";
+  }
+},true);
+
+/* ===== Botão colunas avançadas ===== */
+btnToggleAdvanced.addEventListener("click",()=>{
+  advancedVisible=!advancedVisible;
+  document.body.classList.toggle("show-advanced",advancedVisible);
+  labelAdvanced.textContent = advancedVisible
+    ? "Ocultar colunas avançadas"
+    : "Mostrar colunas avançadas";
+});
+
+/* ===== Exportar CSV (linhas filtradas) ===== */
+btnExportCsv.addEventListener("click",()=>{
+  if(!relatoriosFiltrados.length){
+    alert("Nenhum relatório para exportar.");
+    return;
+  }
+  const sep=";";
+  const header=columns.map(c=>c.label).join(sep);
+  const lines=[header];
+
+  relatoriosFiltrados.forEach(r=>{
+    const row=columns.map(col=>{
+      let v=r[col.key];
+      if(col.key==="duracaoMinutos"){
+        const n=parseInt(v,10);
+        v=isNaN(n)?"":formatMinutesAsHhMm(n);
+      }
+      if(v==null) v="";
+      let s=String(v);
+      s=s.replace(/"/g,'""');
+      if(s.includes(sep) || s.includes('"') || s.includes('\n')){
+        return `"${s}"`;
+      }
+      return s;
+    }).join(sep);
+    lines.push(row);
+  });
+
+  const csv=lines.join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const now=new Date();
+  const yyyy=now.getFullYear();
+  const mm=String(now.getMonth()+1).padStart(2,"0");
+  const dd=String(now.getDate()).padStart(2,"0");
+  a.href=url;
+  a.download=`relatorios-planilha-${yyyy}${mm}${dd}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+/* ===== Carregar relatórios ===== */
+async function carregarRelatorios(){
+  try{
+    subtitleInfo.textContent="Carregando dados do Firebase...";
+    const snap=await db.collection("relatoriosCampo").orderBy("numeroPT","desc").get();
+
+    relatoriosRaw=[];
+    snap.docs.forEach(doc=>{
+      const d = doc.data();
+      const h = d.horarios || {};
+      const e = d.especificacoes || {};
+
+      let criadoEmStr="";
+      if(d.criadoEm && typeof d.criadoEm.toDate==="function"){
+        const dt=d.criadoEm.toDate();
+        const dia=String(dt.getDate()).padStart(2,"0");
+        const mes=String(dt.getMonth()+1).padStart(2,"0");
+        const ano=dt.getFullYear();
+        const hh=String(dt.getHours()).padStart(2,"0");
+        const mm=String(dt.getMinutes()).padStart(2,"0");
+        criadoEmStr=`${dia}/${mes}/${ano} ${hh}:${mm}`;
+      }
+
+      relatoriosRaw.push({
+        id: doc.id,
+
+        numeroPT: d.numeroPT ?? d.numeroPt ?? "",
+        data: d.data || "",
+        diaSemana: d.diaSemana || "",
+        equipamento: d.equipamento || "",
+        placa: d.placa || "",
+        local: d.local || "",
+        tag: d.tag || "",
+        solicitante: d.solicitante || "",
+        emitenteAbertura: d.emitenteAbertura || "",
+        emitenteEncerramento: d.emitenteEncerramento || "",
+        operador: d.operador || "",
+        ajudante: d.ajudante || "",
+        tipoServico: d.tipoServico || e.tipoServico || "",
+
+        h_ddsChecklist: h.ddsChecklist || "",
+        h_disposicao:   h.disposicao   || "",
+        h_chegada:      h.chegada      || "",
+        h_liberacaoPT:  h.liberacaoPT  || "",
+        h_inicio:       h.inicio       || "",
+        h_inicioIntervalo: h.inicioIntervalo || "",
+        h_fimIntervalo: h.fimIntervalo || "",
+        h_fim:          h.fim          || "",
+        h_trocaTurno:   h.trocaTurno   || "",
+
+        tipoAtividade: e.tipoAtividade || d.tipoAtividade || "",
+        oleo:          e.oleo          || d.oleo          || "",
+        quantidade:    e.quantidade    || d.quantidade    || "",
+
+        encerramentoPt: d.encerramentoPt || "",
+        motivoNaoFinalizada: d.motivoNaoFinalizada || "",
+
+        duracaoMinutos: d.duracaoMinutos ?? "",
+        observacoes:    d.observacoes || "",
+        criadoEm:       criadoEmStr,
+        deviceId:       d.deviceId || "",
+        operadorIdFixo: d.operadorIdFixo || ""
+      });
+    });
+
+    subtitleInfo.textContent=`${relatoriosRaw.length} relatório(s) carregado(s)`;
+    renderHeader();
+    aplicarFiltrosEAtualizar();
+  }catch(err){
+    console.error("Erro ao carregar relatórios:",err);
+    subtitleInfo.textContent="Erro ao carregar dados. Veja o console.";
+  }
+}
+
+carregarRelatorios();
+</script>
+
+</body>
+</html>
