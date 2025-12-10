@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Excluídos — Relatórios de Campo</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary:#2563eb;
+  --accent:#1d4ed8;
+  --bg:#f3f6fb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --shadow-soft:0 10px 30px rgba(15,23,42,0.10);
+  --shadow-hard:0 18px 45px rgba(15,23,42,0.20);
+
+  --sidebar-bg:#ffffff;
+  --sidebar-text:#111827;
+  --sidebar-link:#111827;
+}
+.dark {
+  --bg:#020617;
+  --card:#020617;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --border:#111827;
+  --shadow-soft:0 10px 30px rgba(0,0,0,0.60);
+  --shadow-hard:0 18px 45px rgba(0,0,0,0.80);
+
+  --sidebar-bg:#020617;
+  --sidebar-text:#e5e7eb;
+  --sidebar-link:#e5e7eb;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:"Inter",sans-serif;
+  transition:background-color .25s ease,color .25s ease,border-color .25s ease;
+}
+
+/* FUNDO */
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:230px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-text);
+  display:flex;
+  flex-direction:column;
+  padding:14px 12px;
+  gap:14px;
+  position:fixed;
+  inset-block:0;
+  left:0;
+  z-index:40;
+  box-shadow:var(--shadow-hard);
+  transform:translateX(-100%);
+  transition:transform .25s ease, background-color .25s ease, color .25s ease;
+}
+body.sidebar-open .sidebar{
+  transform:translateX(0);
+}
+.sidebar-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.sidebar-title-block{
+  display:flex;
+  flex-direction:column;
+}
+.sidebar-title{
+  font-family:"Outfit";
+  font-weight:800;
+  font-size:1.0rem;
+}
+.sidebar-sub{
+  font-size:.72rem;
+  color:var(--muted);
+}
+.sidebar-toggle-theme{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:1px solid rgba(148,163,184,0.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:transparent;
+  font-size:1rem;
+  color:var(--sidebar-text);
+}
+.sidebar-nav{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.sidebar-link{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 9px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:.85rem;
+  color:var(--sidebar-link);
+  cursor:pointer;
+}
+.sidebar-link span.icon{width:18px;text-align:center;}
+.sidebar-link:hover,
+.sidebar-link.active{
+  background:rgba(37,99,235,0.15);
+}
+.sidebar-footer{
+  margin-top:auto;
+  font-size:.7rem;
+  color:var(--muted);
+  border-top:1px solid rgba(148,163,184,0.3);
+  padding-top:8px;
+}
+
+/* BOTÃO FLOANTE SIDEBAR */
+.sidebar-handle{
+  position:fixed;
+  top:14px;
+  left:10px;
+  z-index:45;
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  background:#2563eb;
+  color:#f9fafb;
+  box-shadow:0 8px 20px rgba(37,99,235,0.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+}
+
+/* MAIN WRAPPER */
+.main-wrapper{
+  flex:1;
+  min-height:100vh;
+  padding:18px 20px 24px;
+  display:flex;
+  flex-direction:column;
+}
+@media(max-width:900px){
+  .main-wrapper{
+    padding-top:56px;
+  }
+}
+
+/* TOPBAR MOBILE */
+.topbar-mobile{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:48px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:"Outfit";
+  font-weight:700;
+  font-size:.9rem;
+  z-index:30;
+}
+@media(min-width:901px){
+  .topbar-mobile{display:none;}
+}
+
+/* HEADER */
+.page-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:12px;
+  margin-bottom:10px;
+}
+.page-title{
+  font-family:"Outfit";
+  font-weight:800;
+  font-size:1.4rem;
+}
+.page-sub{
+  font-size:.8rem;
+  color:var(--muted);
+}
+
+/* FILTROS */
+.filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:12px;
+}
+.filter-chip{
+  display:flex;
+  flex-direction:column;
+  font-size:.75rem;
+  color:var(--muted);
+  gap:2px;
+}
+.filter-chip select,
+.filter-chip input{
+  min-width:120px;
+  padding:6px 9px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--card);
+  font-size:.8rem;
+  color:var(--text);
+  outline:none;
+}
+
+/* GRID DE CARDS */
+.cards-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:10px;
+}
+.card{
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:var(--shadow-soft);
+  border:1px solid rgba(148,163,184,0.25);
+  padding:10px 11px 12px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.card-header-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:.82rem;
+}
+.card-pt{
+  font-weight:700;
+  color:var(--primary);
+}
+.card-tag{
+  font-size:.74rem;
+  color:var(--muted);
+}
+.card-main{
+  font-size:.8rem;
+}
+.card-main span.label{
+  font-weight:600;
+}
+.card-footer{
+  display:flex;
+  gap:6px;
+  margin-top:6px;
+  flex-wrap:wrap;
+}
+.btn{
+  flex:1;
+  padding:7px 8px;
+  border-radius:10px;
+  border:none;
+  font-size:.78rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.btn-view{
+  background:rgba(37,99,235,0.12);
+  color:#bfdbfe;
+}
+.btn-restore{
+  background:rgba(34,197,94,0.18);
+  color:#bbf7d0;
+}
+.btn-del{
+  background:rgba(220,38,38,0.25);
+  color:#fecaca;
+}
+
+/* MODAL DETALHES (igual admin) */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.65);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:60;
+}
+.modal.open{
+  display:flex;
+}
+.modal-box{
+  background:var(--card);
+  color:var(--text);
+  border-radius:18px;
+  padding:16px 18px;
+  max-width:720px;
+  width:96%;
+  max-height:90vh;
+  overflow:auto;
+  box-shadow:var(--shadow-hard);
+  border:1px solid rgba(148,163,184,0.3);
+}
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+.modal-title{
+  font-family:"Outfit";
+  font-size:1.05rem;
+  font-weight:800;
+}
+.modal-close{
+  background:transparent;
+  border:none;
+  font-size:1.2rem;
+  cursor:pointer;
+  color:var(--muted);
+}
+.modal-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:8px;
+  font-size:.8rem;
+}
+.modal-field{
+  background:rgba(15,23,42,0.04);
+  border-radius:10px;
+  padding:5px 7px;
+}
+.dark .modal-field{
+  background:rgba(15,23,42,0.6);
+}
+.modal-field span.label{
+  display:block;
+  font-size:.7rem;
+  color:var(--muted);
+  margin-bottom:2px;
+}
+.modal-field span.value{
+  font-weight:600;
+}
+.modal-section-title{
+  margin-top:10px;
+  font-size:.8rem;
+  font-weight:700;
+}
+
+/* TOAST */
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:20px;
+  transform:translateX(-50%);
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:.8rem;
+  font-weight:600;
+  color:#f9fafb;
+  background:#16a34a;
+  display:none;
+  z-index:70;
+}
+.toast.show{
+  display:block;
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title-block">
+      <span class="sidebar-title">Relatórios de Campo</span>
+      <span class="sidebar-sub">CMPC • RSS3</span>
+    </div>
+    <button id="themeToggle" class="sidebar-toggle-theme" type="button">🌙</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="admin.html" class="sidebar-link">
+      <span class="icon">📋</span><span>Admin</span>
+    </a>
+    <a href="dashboard.html" class="sidebar-link">
+      <span class="icon">📊</span><span>Dashboard</span>
+    </a>
+    <a href="planilha.html" class="sidebar-link">
+      <span class="icon">📑</span><span>Planilha</span>
+    </a>
+    <a href="oleo-ibcs.html" class="sidebar-link">
+      <span class="icon">🛢️</span><span>Óleo em IBCs</span>
+    </a>
+    <a href="excluidos.html" class="sidebar-link active">
+      <span class="icon">🗑️</span><span>Excluídos</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    Relatórios movidos para lixeira,<br>restaure ou exclua de vez.
+  </div>
+</aside>
+
+<button id="sidebarHandle" class="sidebar-handle" type="button">☰</button>
+
+<div class="topbar-mobile">Excluídos — Relatórios</div>
+
+<!-- MAIN -->
+<div class="main-wrapper">
+  <header class="page-header">
+    <div>
+      <div class="page-title">Relatórios Excluídos</div>
+      <div class="page-sub" id="infoCount">Carregando...</div>
+    </div>
+  </header>
+
+  <div class="filters">
+    <div class="filter-chip">
+      <span>Mês</span>
+      <select id="filtroMes">
+        <option value="">Todos</option>
+        <option value="01">Jan</option>
+        <option value="02">Fev</option>
+        <option value="03">Mar</option>
+        <option value="04">Abr</option>
+        <option value="05">Mai</option>
+        <option value="06">Jun</option>
+        <option value="07">Jul</option>
+        <option value="08">Ago</option>
+        <option value="09">Set</option>
+        <option value="10">Out</option>
+        <option value="11">Nov</option>
+        <option value="12">Dez</option>
+      </select>
+    </div>
+    <div class="filter-chip">
+      <span>Placa</span>
+      <input id="filtroPlaca" type="text" placeholder="FOQ6H01...">
+    </div>
+    <div class="filter-chip">
+      <span>Local</span>
+      <input id="filtroLocal" type="text" placeholder="Área / setor...">
+    </div>
+  </div>
+
+  <section id="cards" class="cards-grid"></section>
+  <div id="emptyMsg" style="margin-top:10px;font-size:.8rem;color:var(--muted);display:none;">
+    Nenhum relatório excluído com os filtros atuais.
+  </div>
+
+  <footer style="margin-top:16px;font-size:.75rem;color:var(--muted);text-align:center;">
+    © 2025 | Relatórios de Campo — Excluídos
+  </footer>
+</div>
+
+<!-- MODAL DETALHES -->
+<div id="modal" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Detalhes</div>
+      <button class="modal-close" id="modalClose" type="button">✕</button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCxI5gx0LS0ny2y6UnPUCyW0zf1BjnTSco",
+  authDomain: "checklist-rss3.firebaseapp.com",
+  projectId: "checklist-rss3",
+  storageBucket: "checklist-rss3.appspot.com",
+  messagingSenderId: "179261205524",
+  appId: "1:179261205524:web:376152c3b94fb115f14b01",
+  measurementId: "G-47CPMQ3ZTC"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
+<script>
+// Proteção básica (comente se não quiser)
+if(localStorage.getItem("auth_relatorios")!=="true"){
+  // window.location.href="index.html";
+}
+
+/* Tema */
+const themeToggle=document.getElementById("themeToggle");
+if(localStorage.getItem("tema")==="dark"){
+  document.body.classList.add("dark");
+  themeToggle.textContent="☀️";
+}
+themeToggle.onclick=()=>{
+  document.body.classList.toggle("dark");
+  const dark=document.body.classList.contains("dark");
+  themeToggle.textContent=dark?"☀️":"🌙";
+  localStorage.setItem("tema",dark?"dark":"light");
+};
+
+/* Sidebar */
+const sidebarHandle=document.getElementById("sidebarHandle");
+sidebarHandle.addEventListener("click",()=>{
+  document.body.classList.toggle("sidebar-open");
+});
+</script>
+
+<script>
+const cardsEl=document.getElementById("cards");
+const emptyMsg=document.getElementById("emptyMsg");
+const infoCount=document.getElementById("infoCount");
+const filtroMes=document.getElementById("filtroMes");
+const filtroPlaca=document.getElementById("filtroPlaca");
+const filtroLocal=document.getElementById("filtroLocal");
+const toastEl=document.getElementById("toast");
+
+const modal=document.getElementById("modal");
+const modalClose=document.getElementById("modalClose");
+const modalTitle=document.getElementById("modalTitle");
+const modalContent=document.getElementById("modalContent");
+
+let relatoriosAll=[];
+let relatoriosFiltrados=[];
+
+function showToast(msg,color="#16a34a"){
+  toastEl.textContent=msg;
+  toastEl.style.background=color;
+  toastEl.classList.add("show");
+  setTimeout(()=>toastEl.classList.remove("show"),2600);
+}
+
+modalClose.onclick=()=>modal.classList.remove("open");
+modal.onclick=e=>{
+  if(e.target===modal) modal.classList.remove("open");
+};
+
+function formatDateBr(d){
+  if(!d) return "";
+  if(typeof d==="string" && d.includes("-")){
+    const [y,m,day]=d.split("-");
+    return `${day}/${m}/${y}`;
+  }
+  return d;
+}
+
+/* Abrir modal de detalhes (igual admin) */
+function abrirModal(r){
+  const pt = r.numeroPT || r.numeroPt || "—";
+  modalTitle.textContent=`PT ${pt} — ${formatDateBr(r.data||"")}`;
+
+  const h = r.horarios || {};
+  const esp = r.especificacoes || {};
+
+  modalContent.innerHTML=`
+    <div class="modal-grid">
+      <div class="modal-field"><span class="label">Equipamento</span><span class="value">${r.equipamento||"—"}</span></div>
+      <div class="modal-field"><span class="label">Placa</span><span class="value">${r.placa||"—"}</span></div>
+      <div class="modal-field"><span class="label">Local</span><span class="value">${r.local||"—"}</span></div>
+      <div class="modal-field"><span class="label">Tag</span><span class="value">${r.tag||"—"}</span></div>
+      <div class="modal-field"><span class="label">Solicitante</span><span class="value">${r.solicitante||"—"}</span></div>
+      <div class="modal-field"><span class="label">Emitente Abertura</span><span class="value">${r.emitenteAbertura||"—"}</span></div>
+      <div class="modal-field"><span class="label">Emitente Encerramento</span><span class="value">${r.emitenteEncerramento||"—"}</span></div>
+      <div class="modal-field"><span class="label">Operador</span><span class="value">${r.operador||"—"}</span></div>
+      <div class="modal-field"><span class="label">Ajudante</span><span class="value">${r.ajudante||"—"}</span></div>
+      <div class="modal-field"><span class="label">Tipo Atividade</span><span class="value">${esp.tipoAtividade||r.tipoAtividade||r.tipo||"—"}</span></div>
+      <div class="modal-field"><span class="label">Óleo</span><span class="value">${esp.oleo||r.oleo||"—"}</span></div>
+      <div class="modal-field"><span class="label">Qtd Óleo</span><span class="value">${esp.quantidade||r.quantidade||"—"}</span></div>
+      <div class="modal-field"><span class="label">Tipo Serviço</span><span class="value">${r.tipoServico|| (esp.tipoServico||"—")}</span></div>
+    </div>
+
+    <div class="modal-section-title">Horários</div>
+    <div class="modal-grid">
+      <div class="modal-field"><span class="label">DDS & Checklist</span><span class="value">${h.ddsChecklist||"—"}</span></div>
+      <div class="modal-field"><span class="label">Disposição Coord.</span><span class="value">${h.disposicao||"—"}</span></div>
+      <div class="modal-field"><span class="label">Chegada ao Local</span><span class="value">${h.chegada||"—"}</span></div>
+      <div class="modal-field"><span class="label">Liberação da PT</span><span class="value">${h.liberacaoPT||"—"}</span></div>
+      <div class="modal-field"><span class="label">Início Atividade</span><span class="value">${h.inicio||"—"}</span></div>
+      <div class="modal-field"><span class="label">Fim Atividade</span><span class="value">${h.fim||"—"}</span></div>
+      <div class="modal-field"><span class="label">Início Intervalo</span><span class="value">${h.inicioIntervalo||"—"}</span></div>
+      <div class="modal-field"><span class="label">Fim Intervalo</span><span class="value">${h.fimIntervalo||"—"}</span></div>
+      <div class="modal-field"><span class="label">Troca de Turno</span><span class="value">${h.trocaTurno||"—"}</span></div>
+    </div>
+
+    <div class="modal-section-title">Encerramento da PT</div>
+    <div class="modal-grid">
+      <div class="modal-field">
+        <span class="label">Encerramento</span>
+        <span class="value">${r.encerramentoPt || "—"}</span>
+      </div>
+      <div class="modal-field">
+        <span class="label">Motivo não finalizada</span>
+        <span class="value">${r.motivoNaoFinalizada || "—"}</span>
+      </div>
+    </div>
+
+    <div class="modal-section-title">Observações</div>
+    <div style="font-size:.8rem;margin-top:4px;">${(r.observacoes||"—").replace(/\n/g,"<br>")}</div>
+  `;
+  modal.classList.add("open");
+}
+
+/* Render cards */
+function renderCards(){
+  cardsEl.innerHTML="";
+  if(relatoriosFiltrados.length===0){
+    emptyMsg.style.display="block";
+    infoCount.textContent="Nenhum relatório nos filtros atuais.";
+    return;
+  }
+  emptyMsg.style.display="none";
+  infoCount.textContent=`${relatoriosFiltrados.length} relatório(s) excluído(s)`;
+
+  relatoriosFiltrados.forEach(r=>{
+    const card=document.createElement("article");
+    card.className="card";
+    const pt=r.numeroPT || r.numeroPt || "—";
+    const data=formatDateBr(r.data||"");
+    const placa=r.placa || "—";
+    const local=r.local || "—";
+    const equip=r.equipamento || "—";
+
+    card.innerHTML=`
+      <div class="card-header-row">
+        <span class="card-pt">PT ${pt}</span>
+        <span class="card-tag">${data}</span>
+      </div>
+      <div class="card-main">
+        <div><span class="label">Equipamento:</span> ${equip}</div>
+        <div><span class="label">Placa:</span> ${placa}</div>
+        <div><span class="label">Local:</span> ${local}</div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-view">Ver detalhes</button>
+        <button class="btn btn-restore">Restaurar</button>
+        <button class="btn btn-del">Excluir</button>
+      </div>
+    `;
+
+    card.querySelector(".btn-view").onclick = ()=>abrirModal(r);
+    card.querySelector(".btn-restore").onclick=()=>restaurarRelatorio(r);
+    card.querySelector(".btn-del").onclick=()=>excluirDefinitivo(r);
+
+    cardsEl.appendChild(card);
+  });
+}
+
+/* Filtros */
+filtroMes.onchange =
+filtroPlaca.oninput =
+filtroLocal.oninput = aplicarFiltros;
+
+function aplicarFiltros(){
+  const mes=filtroMes.value;
+  const placaTxt=filtroPlaca.value.trim().toLowerCase();
+  const localTxt=filtroLocal.value.trim().toLowerCase();
+
+  relatoriosFiltrados = relatoriosAll.filter(r=>{
+    if(r.data && mes){
+      const m=String(r.data).slice(5,7);
+      if(m!==mes) return false;
+    }
+    if(placaTxt && !(r.placa||"").toLowerCase().includes(placaTxt)) return false;
+    if(localTxt && !(r.local||"").toLowerCase().includes(localTxt)) return false;
+    return true;
+  });
+
+  renderCards();
+}
+
+/* Restaurar da lixeira para principal */
+async function restaurarRelatorio(r){
+  const pt = r.numeroPT || r.numeroPt || "—";
+  if(!confirm(`Restaurar a PT ${pt} para a lista principal?`)) return;
+  try{
+    const data=Object.assign({},r);
+    delete data.id;
+    // garante numeroPT em string
+    data.numeroPT = String(pt);
+    data.restauradoEm = firebase.firestore.FieldValue.serverTimestamp();
+
+    await db.collection("relatoriosCampo").doc(r.id).set(data);
+    await db.collection("relatoriosCampoExcluidos").doc(r.id).delete();
+    showToast("Relatório restaurado.");
+    await carregarRelatorios();
+  }catch(err){
+    console.error(err);
+    showToast("Erro ao restaurar.","#dc2626");
+  }
+}
+
+/* Excluir definitivamente */
+async function excluirDefinitivo(r){
+  const pt = r.numeroPT || r.numeroPt || "—";
+  if(!confirm(`Excluir definitivamente a PT ${pt}?`)) return;
+  try{
+    await db.collection("relatoriosCampoExcluidos").doc(r.id).delete();
+    showToast("Relatório excluído definitivamente.");
+    await carregarRelatorios();
+  }catch(err){
+    console.error(err);
+    showToast("Erro ao excluir.","#dc2626");
+  }
+}
+
+/* Carregar excluídos */
+async function carregarRelatorios(){
+  try{
+    infoCount.textContent="Carregando dados do Firebase...";
+    const snap=await db.collection("relatoriosCampoExcluidos").orderBy("numeroPT","desc").get();
+    relatoriosAll=snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+    relatoriosFiltrados=[...relatoriosAll];
+    renderCards();
+  }catch(err){
+    console.error(err);
+    infoCount.textContent="Erro ao carregar dados.";
+  }
+}
+
+carregarRelatorios();
+</script>
+
+</body>
+</html>
