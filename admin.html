@@ -484,13 +484,13 @@ body.sidebar-open .sidebar{
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyCxI5gx0LS0ny2y6UnPUCyW0zf1BjnTSco",
-  authDomain: "checklist-rss3.firebaseapp.com",
-  projectId: "checklist-rss3",
-  storageBucket: "checklist-rss3.appspot.com",
-  messagingSenderId: "179261205524",
-  appId: "1:179261205524:web:376152c3b94fb115f14b01",
-  measurementId: "G-47CPMQ3ZTC"
+  apiKey: "AIzaSyBIihMuDH951zhIqey5pcCY5hFRQv-jm2I",
+  authDomain: "hidrojato-rss3-3f04a.firebaseapp.com",
+  projectId: "hidrojato-rss3-3f04a",
+  storageBucket: "hidrojato-rss3-3f04a.firebasestorage.app",
+  messagingSenderId: "607637004872",
+  appId: "1:607637004872:web:ffe7b32d1e92d80d4c2e7d",
+  measurementId: "G-PPZLMT6ZPL"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -637,90 +637,4 @@ function abrirModal(r){
       <div class="modal-field"><span class="label">Disposição Coord.</span><span class="value">${h.disposicao||"—"}</span></div>
       <div class="modal-field"><span class="label">Chegada ao Local</span><span class="value">${h.chegada||"—"}</span></div>
       <div class="modal-field"><span class="label">Liberação da PT</span><span class="value">${h.liberacaoPT||"—"}</span></div>
-      <div class="modal-field"><span class="label">Início Atividade</span><span class="value">${h.inicio||"—"}</span></div>
-      <div class="modal-field"><span class="label">Fim Atividade</span><span class="value">${h.fim||"—"}</span></div>
-      <div class="modal-field"><span class="label">Início Intervalo</span><span class="value">${h.inicioIntervalo||"—"}</span></div>
-      <div class="modal-field"><span class="label">Fim Intervalo</span><span class="value">${h.fimIntervalo||"—"}</span></div>
-      <div class="modal-field"><span class="label">Troca de Turno</span><span class="value">${h.trocaTurno||"—"}</span></div>
-    </div>
-
-    <div class="modal-section-title">Encerramento da PT</div>
-    <div class="modal-grid">
-      <div class="modal-field">
-        <span class="label">Encerramento</span>
-        <span class="value">${r.encerramentoPt || "—"}</span>
-      </div>
-      <div class="modal-field">
-        <span class="label">Motivo não finalizada</span>
-        <span class="value">${r.motivoNaoFinalizada || "—"}</span>
-      </div>
-    </div>
-
-    <div class="modal-section-title">Observações</div>
-    <div style="font-size:.8rem;margin-top:4px;">${(r.observacoes||"—").replace(/\n/g,"<br>")}</div>
-  `;
-  modal.classList.add("open");
-}
-
-async function excluirRelatorio(r){
-  const pt = r.numeroPT || r.numeroPt || "—";
-  if(!confirm(`Mover a PT ${pt} para Excluídos?`)) return;
-  try{
-    const data = Object.assign({}, r);
-    delete data.id;
-    data.numeroPT = pt;
-    data.deletadoEm = firebase.firestore.FieldValue.serverTimestamp();
-
-    await db.collection("relatoriosCampoExcluidos").doc(r.id).set(data);
-    await db.collection("relatoriosCampo").doc(r.id).delete();
-
-    showToast("Relatório movido para Excluídos.");
-    await carregarRelatorios();
-  }catch(err){
-    console.error(err);
-    showToast("Erro ao excluir.", "#dc2626");
-  }
-}
-
-/* Filtros */
-filtroMes.onchange =
-filtroPlaca.oninput =
-filtroLocal.oninput = aplicarFiltros;
-
-function aplicarFiltros(){
-  const mes=filtroMes.value;
-  const placaTxt=filtroPlaca.value.trim().toLowerCase();
-  const localTxt=filtroLocal.value.trim().toLowerCase();
-
-  relatoriosFiltrados = relatoriosAll.filter(r=>{
-    if(r.data && mes){
-      const m=String(r.data).slice(5,7);
-      if(m!==mes) return false;
-    }
-    if(placaTxt && !(r.placa||"").toLowerCase().includes(placaTxt)) return false;
-    if(localTxt && !(r.local||"").toLowerCase().includes(localTxt)) return false;
-    return true;
-  });
-
-  renderCards();
-}
-
-/* Carregar do Firebase (mais novos em cima) */
-async function carregarRelatorios(){
-  try{
-    infoCount.textContent="Carregando dados do Firebase...";
-    const snap=await db.collection("relatoriosCampo").orderBy("numeroPT","desc").get();
-    relatoriosAll=snap.docs.map(doc=>({id:doc.id,...doc.data()}));
-    relatoriosFiltrados=[...relatoriosAll];
-    renderCards();
-  }catch(err){
-    console.error(err);
-    infoCount.textContent="Erro ao carregar dados.";
-  }
-}
-
-carregarRelatorios();
-</script>
-
-</body>
-</html>
+      <div class="modal-field"><span class="label">Início Atividade</span><span class="value">${h.inicio||"—"}</span></div>0
