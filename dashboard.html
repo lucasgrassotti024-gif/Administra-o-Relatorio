@@ -399,7 +399,7 @@ footer{
       <span class="sidebar-title">Relatórios de Campo</span>
       <span class="sidebar-sub">CMPC • RSS3</span>
     </div>
-    <button id="themeToggle" class="sidebar-toggle-theme" type="button">🌙</button>
+    <button id="themeToggle" class="sidebar-toggle-theme" type="button" aria-label="Alternar tema">🌙</button>
   </div>
 
   <nav class="sidebar-nav">
@@ -425,7 +425,7 @@ footer{
   </div>
 </aside>
 
-<button id="sidebarHandle" class="sidebar-handle" type="button">☰</button>
+<button id="sidebarHandle" class="sidebar-handle" type="button" aria-label="Abrir menu">☰</button>
 
 <div class="topbar-mobile">Dashboard — Relatórios</div>
 
@@ -433,7 +433,6 @@ footer{
 <div class="main-wrapper">
   <header class="dashboard-header">
     <div class="dashboard-title">Dashboard de Atividades</div>
-    <!-- Tag de período agora começa vazia, sem frase "Mês: todos — ..." -->
     <div class="tag-periodo" id="tagPeriodo"></div>
   </header>
 
@@ -441,7 +440,7 @@ footer{
   <div class="filters">
     <div class="filter-chip">
       <span>Mês</span>
-      <select id="filtroMes">
+      <select id="filtroMes" aria-label="Filtrar por mês">
         <option value="">Todos</option>
         <option value="01">Jan</option>
         <option value="02">Fev</option>
@@ -461,14 +460,12 @@ footer{
     <div class="filter-chip">
       <span>Local</span>
       <div class="multi-select">
-        <button type="button" id="btnLocal">
+        <button type="button" id="btnLocal" aria-haspopup="true" aria-expanded="false">
           <span id="btnLocalText">Todos os locais</span>
           <span>▾</span>
         </button>
-        <div class="multi-panel" id="panelLocal">
-          <div class="multi-panel-inner" id="panelLocalList">
-            <!-- opções de locais (preenchido via JS) -->
-          </div>
+        <div class="multi-panel" id="panelLocal" role="dialog" aria-hidden="true">
+          <div class="multi-panel-inner" id="panelLocalList"></div>
           <button type="button" id="applyLocal">Aplicar</button>
         </div>
       </div>
@@ -497,7 +494,6 @@ footer{
 
   <!-- GRÁFICOS -->
   <section class="charts-column">
-    <!-- TOPO: ÁREAS -->
     <div class="card-surface">
       <h3>Atividades por Área / Local</h3>
       <div class="chart-wrap chart-wrap-top">
@@ -505,7 +501,6 @@ footer{
       </div>
     </div>
 
-    <!-- BAIXO: ESQUERDA + DIREITA -->
     <div class="charts-bottom">
       <div class="card-surface">
         <h3>Tempo Trabalhado por Caminhão</h3>
@@ -532,7 +527,7 @@ footer{
   </footer>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase compat (igual aos outros arquivos) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
@@ -550,25 +545,24 @@ const db = firebase.firestore();
 </script>
 
 <script>
-// Proteção básica (se não quiser, só comentar o redirect)
+// Proteção básica (se estiver usando auth via localStorage)
 if(localStorage.getItem("auth_relatorios")!=="true"){
   // window.location.href="index.html";
 }
 
-/* Tema */
+/* Tema persistente */
 const themeToggle=document.getElementById("themeToggle");
 if(localStorage.getItem("tema")==="dark"){
   document.body.classList.add("dark");
   themeToggle.textContent="☀️";
 }
 themeToggle.onclick=()=>{
-  document.body.classList.toggle("dark");
-  const dark=document.body.classList.contains("dark");
-  themeToggle.textContent=dark?"☀️":"🌙";
-  localStorage.setItem("tema",dark?"dark":"light");
+  const isDark = document.body.classList.toggle("dark");
+  themeToggle.textContent = isDark ? "☀️" : "🌙";
+  localStorage.setItem("tema", isDark ? "dark" : "light");
 };
 
-/* Sidebar abre/fecha (overlay, conteúdo não se mexe) */
+/* Sidebar */
 const sidebarHandle=document.getElementById("sidebarHandle");
 sidebarHandle.addEventListener("click",()=>{
   document.body.classList.toggle("sidebar-open");
@@ -581,7 +575,7 @@ let filtrados = [];
 let locaisDisponiveis = [];
 let locaisSelecionados = new Set();
 
-// Filtros
+// Elements
 const filtroMesEl=document.getElementById("filtroMes");
 const btnLocal=document.getElementById("btnLocal");
 const btnLocalText=document.getElementById("btnLocalText");
@@ -591,13 +585,11 @@ const applyLocalBtn=document.getElementById("applyLocal");
 const tagPeriodo=document.getElementById("tagPeriodo");
 const miniSummaryEl=document.getElementById("miniSummary");
 
-// KPIs
 const kpiAtividades=document.getElementById("kpiAtividades");
 const kpiTrabalhando=document.getElementById("kpiTrabalhando");
 const kpiDDS=document.getElementById("kpiDDS");
 const kpiEspera=document.getElementById("kpiEspera");
 
-// Charts
 let chartArea=null;
 let chartCaminhao=null;
 let chartTempoCaminhao=null;
@@ -605,138 +597,138 @@ let chartTempoCaminhao=null;
 /* ===== Helpers de tempo ===== */
 function parseTimeToMinutes(str){
   if(!str) return null;
-  const parts=str.split(":");
-  if(parts.length<2) return null;
-  const h=parseInt(parts[0],10);
-  const m=parseInt(parts[1],10);
-  if(isNaN(h)||isNaN(m)) return null;
-  return h*60+m;
+  str = String(str).trim();
+  if(!str) return null;
+  const parts = str.split(":");
+  if(parts.length < 2) return null;
+  const h = parseInt(parts[0].replace(/^0+/,"")||"0",10);
+  const m = parseInt(parts[1].replace(/^0+/,"")||"0",10);
+  if(Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h*60 + m;
 }
 function diffMinutes(a,b){
-  const ma=parseTimeToMinutes(a);
-  const mb=parseTimeToMinutes(b);
+  const ma = parseTimeToMinutes(a);
+  const mb = parseTimeToMinutes(b);
   if(ma==null || mb==null) return null;
-  const diff=mb-ma;
-  if(diff<=0) return null;
+  const diff = mb - ma;
+  if(diff <= 0) return null;
   return diff;
 }
-/* 🔹 Novo formato HH:MM para tudo (KPIs e gráfico de tempo por caminhão) */
 function formatMinutesAsHhMm(min){
-  if(!min || min<=0) return "00:00";
-  const h=Math.floor(min/60);
-  const m=min%60;
+  if(min==null || isNaN(min) || min <= 0) return "00:00";
+  const h = Math.floor(min/60);
+  const m = min % 60;
   return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 }
 
-/* 🔹 Novo cálculo de TRABALHO com intervalo:
-   - base = fim - início
-   - se o intervalo (inícioIntervalo e fimIntervalo) estiver DENTRO desse período -> desconta 1h
-   - se estiver antes do início ou depois do fim -> não desconta nada
-*/
+/* computeTrabalho com regra de intervalo */
 function computeTrabalho(h){
   if(!h) return null;
-  const inicioStr=h.inicio;
-  const fimStr=h.fim;
-  const base=diffMinutes(inicioStr,fimStr);
+  const inicio = h.inicio;
+  const fim = h.fim;
+  const base = diffMinutes(inicio, fim);
   if(base==null) return null;
 
-  const inicioMin=parseTimeToMinutes(inicioStr);
-  const fimMin=parseTimeToMinutes(fimStr);
-  const iniInt=parseTimeToMinutes(h.inicioIntervalo);
-  const fimInt=parseTimeToMinutes(h.fimIntervalo);
+  const iniInt = parseTimeToMinutes(h.inicioIntervalo);
+  const fimInt = parseTimeToMinutes(h.fimIntervalo);
+  const inicioMin = parseTimeToMinutes(inicio);
+  const fimMin = parseTimeToMinutes(fim);
 
-  if(
-    iniInt!=null && fimInt!=null &&
-    inicioMin!=null && fimMin!=null &&
-    iniInt>=inicioMin && fimInt<=fimMin
-  ){
-    const ajustado = base - 60; // desconta 1h fixo
-    return ajustado>0 ? ajustado : 0;
+  if(iniInt!=null && fimInt!=null && inicioMin!=null && fimMin!=null){
+    if(iniInt >= inicioMin && fimInt <= fimMin){
+      const ajust = base - 60; // desconto fixo 1h quando intervalo dentro do período
+      return ajust > 0 ? ajust : 0;
+    }
   }
   return base;
 }
 
-/* ===== Plugin p/ valores nas barras/pontos ===== */
+/* ===== Plugin para mostrar labels (com proteção caso Chart não exista) ===== */
 const valueLabelPlugin = {
   id:'valueLabelPlugin',
   afterDatasetsDraw(chart){
-    const {ctx}=chart;
+    if(!chart || !chart.ctx) return;
+    const ctx = chart.ctx;
     ctx.save();
     chart.data.datasets.forEach((dataset,i)=>{
-      const meta=chart.getDatasetMeta(i);
-      if(meta.hidden) return;
+      const meta = chart.getDatasetMeta(i);
+      if(!meta || meta.hidden) return;
       meta.data.forEach((element,index)=>{
-        const value=dataset.data[index];
+        const value = dataset.data[index];
         if(value==null || value===0) return;
 
         let text;
-        // 🔹 Para o gráfico de tempo por caminhão, mostrar HH:MM
         if(chart.canvas && chart.canvas.id==="chartTempoCaminhao"){
           text = formatMinutesAsHhMm(value);
         }else{
-          text = value.toString();
+          text = String(value);
         }
 
         ctx.font='10px "Inter",sans-serif';
         ctx.fillStyle='#f9fafb';
         ctx.textAlign='center';
         ctx.textBaseline='middle';
-        let {x,y}=element.getProps(['x','y'],true);
+
+        let x = element.x ?? element.getProps(['x']).x;
+        let y = element.y ?? element.getProps(['y']).y;
 
         if(chart.config.type==='line'){
-          y-=10;
-        }else if(chart.config.type==='bar'){
+          y -= 10;
+        } else if(chart.config.type==='bar'){
           if(chart.options.indexAxis==='y'){
-            x-=10; ctx.textAlign='right';
-          }else{
-            y+=10;
+            x -= 10; ctx.textAlign='right';
+          } else {
+            y += 10;
           }
         }
-        ctx.fillText(text,x,y);
+
+        ctx.fillText(text, x, y);
       });
     });
     ctx.restore();
   }
 };
-Chart.register(valueLabelPlugin);
+try{ Chart.register(valueLabelPlugin); }catch(e){console.warn("Chart plugin register failed:",e);}
 
-/* ===== Multi-select de locais (estilo Excel) ===== */
+/* ===== Multi-select locais ===== */
 btnLocal.addEventListener("click",(e)=>{
   e.stopPropagation();
-  panelLocal.classList.toggle("open");
+  const open = panelLocal.classList.toggle("open");
+  panelLocal.setAttribute("aria-hidden", String(!open));
+  btnLocal.setAttribute("aria-expanded", String(open));
 });
-panelLocal.addEventListener("click",e=>e.stopPropagation());
-window.addEventListener("click",()=>panelLocal.classList.remove("open"));
+panelLocal.addEventListener("click", e => e.stopPropagation());
+window.addEventListener("click", () => {
+  panelLocal.classList.remove("open");
+  panelLocal.setAttribute("aria-hidden","true");
+  btnLocal.setAttribute("aria-expanded","false");
+});
 
 function renderLocaisFilter(){
-  panelLocalList.innerHTML="";
-  if(locaisDisponiveis.length===0){
-    panelLocalList.innerHTML='<div style="font-size:.8rem;color:var(--muted);">Nenhum local cadastrado ainda.</div>';
+  panelLocalList.innerHTML = "";
+  if(!locaisDisponiveis || locaisDisponiveis.length===0){
+    panelLocalList.innerHTML = '<div style="font-size:.8rem;color:var(--muted);">Nenhum local cadastrado ainda.</div>';
     return;
   }
   locaisDisponiveis.forEach(loc=>{
-    const opt=document.createElement("label");
-    opt.className="multi-option";
+    const label = document.createElement("label");
+    label.className = "multi-option";
     const checked = locaisSelecionados.size===0 || locaisSelecionados.has(loc);
-    opt.innerHTML = `
-      <input type="checkbox" ${checked?"checked":""} data-value="${loc}">
-      <span>${loc}</span>
-    `;
-    panelLocalList.appendChild(opt);
+    label.innerHTML = `<input type="checkbox" ${checked?"checked":""} data-value="${loc}"> <span>${loc}</span>`;
+    panelLocalList.appendChild(label);
   });
 }
 
 applyLocalBtn.addEventListener("click",()=>{
-  const checks=panelLocalList.querySelectorAll('input[type="checkbox"]');
-  const novos=new Set();
+  const checks = panelLocalList.querySelectorAll('input[type="checkbox"]');
+  const novos = new Set();
   checks.forEach(ch=>{
     if(ch.checked) novos.add(ch.dataset.value);
   });
-  // se todos estiverem selecionados ou nenhum -> consideramos "todos" (set vazio)
   if(novos.size===0 || novos.size===locaisDisponiveis.length){
     locaisSelecionados = new Set();
-    btnLocalText.textContent="Todos os locais";
-  }else{
+    btnLocalText.textContent = "Todos os locais";
+  } else {
     locaisSelecionados = novos;
     btnLocalText.textContent = `${novos.size} selecionado(s)`;
   }
@@ -744,223 +736,160 @@ applyLocalBtn.addEventListener("click",()=>{
   aplicaFiltros();
 });
 
-/* ===== Filtro por mês ===== */
+/* ===== Filtro mês ===== */
 filtroMesEl.addEventListener("change",aplicaFiltros);
 
-/* ===== Aplicar filtros ===== */
+/* ===== Aplica filtros e recalc ===== */
 function aplicaFiltros(){
-  const mes=filtroMesEl.value;
-
+  const mes = filtroMesEl.value;
   filtrados = relatorios.filter(r=>{
-    if(r.data){
-      const ds=String(r.data);
-      const m=ds.slice(5,7);
-      if(mes && m!==mes) return false;
+    if(r.data && mes){
+      const m = String(r.data).slice(5,7);
+      if(m !== mes) return false;
     }
-    // filtro por locais
     if(locaisSelecionados.size>0){
-      const loc=(r.local||"").trim();
+      const loc = (r.local||"").trim();
       if(!locaisSelecionados.has(loc)) return false;
     }
     return true;
   });
 
-  // 🔹 Removido texto "Mês: todos — X atividades"
   tagPeriodo.textContent = "";
-
   atualizarKpisECharts();
 }
 
-/* ===== KPIs + gráficos ===== */
+/* ===== KPIs e agregações ===== */
 function atualizarKpisECharts(){
-  const total=filtrados.length;
-  kpiAtividades.textContent=total;
+  const total = filtrados.length;
+  kpiAtividades.textContent = total;
 
   if(total===0){
-    kpiTrabalhando.textContent="00:00";
-    kpiDDS.textContent="00:00";
-    kpiEspera.textContent="00:00";
-    miniSummaryEl.textContent="Sem dados para exibir. Ajuste os filtros.";
+    kpiTrabalhando.textContent = "00:00";
+    kpiDDS.textContent = "00:00";
+    kpiEspera.textContent = "00:00";
+    miniSummaryEl.textContent = "Sem dados para exibir. Ajuste os filtros.";
     atualizarGraficos({labels:[],data:[]},{labels:[],data:[]},{labels:[],data:[]});
     return;
   }
 
   let totalTrabalho=0, totalDDS=0, totalEspera=0;
+  const mapArea = new Map();
+  const mapCaminhaoCount = new Map();
+  const mapCaminhaoTempo = new Map();
 
   filtrados.forEach(r=>{
-    const h=r.horarios||{};
+    const h = r.horarios || {};
 
-    // 🔹 Novo cálculo de tempo trabalhado (com regra do intervalo)
-    const dTrab=computeTrabalho(h);
-    if(dTrab!=null) totalTrabalho+=dTrab;
+    const dTrab = computeTrabalho(h);
+    if(dTrab!=null) totalTrabalho += dTrab;
 
-    const ddds=diffMinutes(h.ddsChecklist,h.disposicao);
-    if(ddds!=null) totalDDS+=ddds;
+    const ddds = diffMinutes(h.ddsChecklist, h.disposicao);
+    if(ddds!=null) totalDDS += ddds;
 
-    const desp=diffMinutes(h.chegada,h.liberacaoPT);
-    if(desp!=null) totalEspera+=desp;
-  });
+    const desp = diffMinutes(h.chegada, h.liberacaoPT);
+    if(desp!=null) totalEspera += desp;
 
-  // 🔹 KPIs em HH:MM
-  kpiTrabalhando.textContent=formatMinutesAsHhMm(totalTrabalho);
-  kpiDDS.textContent=formatMinutesAsHhMm(totalDDS);
-  kpiEspera.textContent=formatMinutesAsHhMm(totalEspera);
+    const area = (r.local||"Sem local").trim() || "Sem local";
+    mapArea.set(area, (mapArea.get(area)||0) + 1);
 
-  // 🔹 Removida frase "Trabalho: ... DDS ..." no rodapé
-  miniSummaryEl.textContent = "";
+    const placa = (r.placa||"Sem placa").trim() || "Sem placa";
+    mapCaminhaoCount.set(placa, (mapCaminhaoCount.get(placa)||0) + 1);
 
-  const mapArea=new Map();
-  const mapCaminhaoCount=new Map();
-  const mapCaminhaoTempo=new Map();
-
-  filtrados.forEach(r=>{
-    const area=(r.local||"Sem local").trim()||"Sem local";
-    mapArea.set(area,(mapArea.get(area)||0)+1);
-
-    const placa=(r.placa||"Sem placa").trim()||"Sem placa";
-    mapCaminhaoCount.set(placa,(mapCaminhaoCount.get(placa)||0)+1);
-
-    const h=r.horarios||{};
-    const dTrab=computeTrabalho(h);
     if(dTrab!=null){
-      // 🔹 Guarda MINUTOS para depois formatar como HH:MM no gráfico
-      mapCaminhaoTempo.set(placa,(mapCaminhaoTempo.get(placa)||0)+dTrab);
+      mapCaminhaoTempo.set(placa, (mapCaminhaoTempo.get(placa)||0) + dTrab);
     }
   });
 
-  const arrArea=Array.from(mapArea.entries()).sort((a,b)=>b[1]-a[1]).slice(0,25);
-  const labelsArea=arrArea.map(e=>e[0]);
-  const dataArea=arrArea.map(e=>e[1]);
+  kpiTrabalhando.textContent = formatMinutesAsHhMm(totalTrabalho);
+  kpiDDS.textContent = formatMinutesAsHhMm(totalDDS);
+  kpiEspera.textContent = formatMinutesAsHhMm(totalEspera);
+  miniSummaryEl.textContent = "";
 
-  const arrCamCount=Array.from(mapCaminhaoCount.entries()).sort((a,b)=>b[1]-a[1]);
-  const labelsCamCount=arrCamCount.map(e=>e[0]);
-  const dataCamCount=arrCamCount.map(e=>e[1]);
+  const arrArea = Array.from(mapArea.entries()).sort((a,b)=>b[1]-a[1]).slice(0,25);
+  const labelsArea = arrArea.map(e=>e[0]);
+  const dataArea = arrArea.map(e=>e[1]);
 
-  const arrCamTempo=Array.from(mapCaminhaoTempo.entries()).sort((a,b)=>b[1]-a[1]);
-  const labelsCamTempo=arrCamTempo.map(e=>e[0]);
-  const dataCamTempo=arrCamTempo.map(e=>e[1]); // minutos
+  const arrCamCount = Array.from(mapCaminhaoCount.entries()).sort((a,b)=>b[1]-a[1]);
+  const labelsCamCount = arrCamCount.map(e=>e[0]);
+  const dataCamCount = arrCamCount.map(e=>e[1]);
+
+  const arrCamTempo = Array.from(mapCaminhaoTempo.entries()).sort((a,b)=>b[1]-a[1]);
+  const labelsCamTempo = arrCamTempo.map(e=>e[0]);
+  const dataCamTempo = arrCamTempo.map(e=>e[1]);
 
   atualizarGraficos(
-    {labels:labelsArea,data:dataArea},
-    {labels:labelsCamCount,data:dataCamCount},
-    {labels:labelsCamTempo,data:dataCamTempo}
+    {labels: labelsArea, data: dataArea},
+    {labels: labelsCamCount, data: dataCamCount},
+    {labels: labelsCamTempo, data: dataCamTempo}
   );
 }
 
-/* ===== Gráficos ===== */
-function atualizarGraficos(areaAgg,camCountAgg,camTempoAgg){
-  const ctxArea=document.getElementById("chartArea").getContext("2d");
-  const ctxCam=document.getElementById("chartCaminhao").getContext("2d");
-  const ctxTempo=document.getElementById("chartTempoCaminhao").getContext("2d");
+/* ===== Charts rendering ===== */
+function atualizarGraficos(areaAgg, camCountAgg, camTempoAgg){
+  const ctxArea = document.getElementById("chartArea").getContext("2d");
+  const ctxCam = document.getElementById("chartCaminhao").getContext("2d");
+  const ctxTempo = document.getElementById("chartTempoCaminhao").getContext("2d");
 
   if(chartArea) chartArea.destroy();
   if(chartCaminhao) chartCaminhao.destroy();
   if(chartTempoCaminhao) chartTempoCaminhao.destroy();
 
-  const azul="rgba(37,99,235,0.9)";
-  const azulBar="rgba(37,99,235,0.85)";
+  const azul = "rgba(37,99,235,0.9)";
+  const azulBar = "rgba(37,99,235,0.85)";
 
-  // TOPO: ÁREAS (barras verticais)
-  chartArea=new Chart(ctxArea,{
-    type:"bar",
-    data:{
-      labels:areaAgg.labels||[],
-      datasets:[{
-        data:areaAgg.data||[],
-        backgroundColor:azulBar,
-        borderRadius:4,
-        maxBarThickness:20
-      }]
+  chartArea = new Chart(ctxArea, {
+    type: "bar",
+    data: {
+      labels: areaAgg.labels || [],
+      datasets: [{ data: areaAgg.data || [], backgroundColor: azulBar, borderRadius: 4, maxBarThickness: 20 }]
     },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{enabled:false} },
       scales:{
-        x:{
-          grid:{display:false},
-          border:{display:false},
-          ticks:{autoSkip:false,maxRotation:60,minRotation:30,font:{size:10}}
-        },
-        y:{
-          beginAtZero:true,
-          grid:{display:false},
-          border:{display:false},
-          ticks:{display:false}
-        }
+        x:{ grid:{display:false}, border:{display:false}, ticks:{autoSkip:false, maxRotation:60, minRotation:30, font:{size:10}} },
+        y:{ beginAtZero:true, grid:{display:false}, border:{display:false}, ticks:{display:false} }
       }
     }
   });
 
-  // BAIXO DIREITA: ATIVIDADES POR CAMINHÃO (barras horizontais)
-  chartCaminhao=new Chart(ctxCam,{
-    type:"bar",
-    data:{
-      labels:camCountAgg.labels||[],
-      datasets:[{
-        data:camCountAgg.data||[],
-        backgroundColor:azulBar,
-        borderRadius:4,
-        maxBarThickness:20
-      }]
+  chartCaminhao = new Chart(ctxCam, {
+    type: "bar",
+    data: {
+      labels: camCountAgg.labels || [],
+      datasets: [{ data: camCountAgg.data || [], backgroundColor: azulBar, borderRadius: 4, maxBarThickness: 20 }]
     },
-    options:{
-      indexAxis:"y",
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
+    options: {
+      indexAxis: "y", responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{enabled:false} },
       scales:{
-        x:{
-          beginAtZero:true,
-          grid:{display:false},
-          border:{display:false},
-          ticks:{display:false}
-        },
-        y:{
-          grid:{display:false},
-          border:{display:false},
-          ticks:{font:{size:10}}
-        }
+        x:{ beginAtZero:true, grid:{display:false}, border:{display:false}, ticks:{display:false} },
+        y:{ grid:{display:false}, border:{display:false}, ticks:{font:{size:10}} }
       }
     }
   });
 
-  // BAIXO ESQUERDA: TEMPO POR CAMINHÃO (área, dados em minutos)
-  const grad=ctxTempo.createLinearGradient(0,0,0,200);
+  // Tempo por caminhão (minutos) - line with area fill
+  const grad = ctxTempo.createLinearGradient(0,0,0,200);
   grad.addColorStop(0,"rgba(37,99,235,0.7)");
   grad.addColorStop(1,"rgba(37,99,235,0.05)");
 
-  chartTempoCaminhao=new Chart(ctxTempo,{
-    type:"line",
-    data:{
-      labels:camTempoAgg.labels||[],
-      datasets:[{
-        data:camTempoAgg.data||[], // minutos
-        fill:true,
-        backgroundColor:grad,
-        borderColor:azul,
-        borderWidth:2,
-        pointRadius:4,
-        pointBackgroundColor:azul,
-        tension:0.35
+  chartTempoCaminhao = new Chart(ctxTempo, {
+    type: "line",
+    data: {
+      labels: camTempoAgg.labels || [],
+      datasets: [{
+        data: camTempoAgg.data || [],
+        fill:true, backgroundColor:grad, borderColor:azul, borderWidth:2,
+        pointRadius:4, pointBackgroundColor:azul, tension:0.35
       }]
     },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{enabled:false} },
       scales:{
-        x:{
-          grid:{display:false},
-          border:{display:false},
-          ticks:{font:{size:10}}
-        },
-        y:{
-          beginAtZero:true,
-          grid:{display:false},
-          border:{display:false},
-          ticks:{display:false}
-        }
+        x:{ grid:{display:false}, border:{display:false}, ticks:{font:{size:10}} },
+        y:{ beginAtZero:true, grid:{display:false}, border:{display:false}, ticks:{display:false} }
       }
     }
   });
@@ -969,25 +898,21 @@ function atualizarGraficos(areaAgg,camCountAgg,camTempoAgg){
 /* ===== Carregar relatórios do Firebase ===== */
 async function carregarRelatorios(){
   try{
-    miniSummaryEl.textContent="Carregando dados do Firebase...";
-    const snap=await db.collection("relatoriosCampo").orderBy("data","asc").get();
-    relatorios=snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+    miniSummaryEl.textContent = "Carregando dados do Firebase...";
+    const snap = await db.collection("relatoriosCampo").orderBy("data","asc").get();
+    relatorios = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    // montar lista de locais para o filtro
-    const setLocais=new Set();
-    relatorios.forEach(r=>{
-      if(r.local){
-        setLocais.add(r.local.trim());
-      }
-    });
-    locaisDisponiveis=Array.from(setLocais).sort((a,b)=>a.localeCompare(b));
+    // montar locais
+    const setLoc = new Set();
+    relatorios.forEach(r => { if(r.local) setLoc.add(r.local.trim()); });
+    locaisDisponiveis = Array.from(setLoc).sort((a,b)=>a.localeCompare(b));
     renderLocaisFilter();
 
-    miniSummaryEl.textContent="Carregando estatísticas...";
+    miniSummaryEl.textContent = "Carregando estatísticas...";
     aplicaFiltros();
   }catch(err){
-    console.error("Erro ao carregar relatórios:",err);
-    miniSummaryEl.textContent="Erro ao carregar dados. Veja o console.";
+    console.error("Erro ao carregar relatórios:", err);
+    miniSummaryEl.textContent = "Erro ao carregar dados. Veja o console.";
   }
 }
 
