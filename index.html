@@ -2,297 +2,105 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Login — Relatórios de Campo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Relatórios de Campo — Login</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
-body{
-  margin:0;
-  background:#f3f6fb;
-  font-family:"Inter",sans-serif;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#111827;
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: #eef2f7;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.login-box{
-  width:94%;
-  max-width:360px;
-  background:#fff;
-  padding:26px 22px;
-  border-radius:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.12);
+
+.login-box {
+  width: 330px;
+  background: #fff;
+  padding: 25px 28px;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+  text-align: center;
 }
-.title{
-  font-family:"Outfit";
-  font-size:1.4rem;
-  font-weight:800;
-  text-align:center;
-  margin-bottom:4px;
+
+.login-box h1 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 4px;
 }
-.sub{
-  font-size:.8rem;
-  text-align:center;
-  color:#6b7280;
-  margin-bottom:16px;
+
+.login-box span.sub {
+  font-size: .78rem;
+  color: #6b7280;
 }
-input{
-  width:100%;
-  padding:10px 12px;
-  margin-top:10px;
-  font-size:.9rem;
-  border-radius:10px;
-  border:1px solid #d1d5db;
-  outline:none;
+
+input {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: .9rem;
+  outline: none;
 }
-button{
-  width:100%;
-  padding:11px 12px;
-  margin-top:16px;
-  border:none;
-  border-radius:10px;
-  font-size:.9rem;
-  font-weight:700;
-  cursor:pointer;
-  background:#2563eb;
-  color:#f9fafb;
-  box-shadow:0 6px 18px rgba(37,99,235,0.5);
+
+button {
+  margin-top: 18px;
+  width: 100%;
+  padding: 10px 12px;
+  background: #2563eb;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  font-size: .95rem;
+  cursor: pointer;
 }
-.err{
-  color:#dc2626;
-  font-size:.8rem;
-  margin-top:10px;
-  text-align:center;
+
+button:hover {
+  background: #1d4ed8;
 }
-footer{
-  text-align:center;
-  margin-top:16px;
-  font-size:.75rem;
-  color:#6b7280;
+
+.msg-erro {
+  margin-top: 10px;
+  font-size: .82rem;
+  color: #dc2626;
+  display: none;
 }
 </style>
 </head>
+
 <body>
 
 <div class="login-box">
-  <div class="title">Relatórios de Campo</div>
-  <div class="sub">Acesso restrito</div>
+  <h1>Relatórios de Campo</h1>
+  <span class="sub">Acesso restrito</span>
 
-  <input id="user" type="text" placeholder="Usuário">
-  <input id="pass" type="password" placeholder="Senha">
+  <input type="password" id="senha" placeholder="Senha">
 
-  <button id="btnLogin">Entrar</button>
+  <button onclick="login()">Entrar</button>
 
-  <div id="err" class="err"></div>
-
-  <footer>© 2025 • RSS3 – CMPC</footer>
+  <div class="msg-erro" id="erro">Senha incorreta.</div>
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
 <script>
-// NOVO FIREBASE — substituído sem alterar nada no restante do código
-const firebaseConfig = {
-  apiKey: "AIzaSyC8loXqt9Vaup9baWt6cFhYU8ikX8BQv5U",
-  authDomain: "relatorio-rss3.firebaseapp.com",
-  projectId: "relatorio-rss3",
-  storageBucket: "relatorio-rss3.firebasestorage.app",
-  messagingSenderId: "540170198292",
-  appId: "1:540170198292:web:6edec9ab51983c22eb7601",
-  measurementId: "G-WYE6VL928H"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-</script>
+function login() {
+  const senhaDigitada = document.getElementById("senha").value.trim();
+  const senhaCorreta = "relatório.RSS3";  // senha definida por você
 
-<script>
-const btn=document.getElementById("btnLogin");
-const err=document.getElementById("err");
+  if (senhaDigitada === senhaCorreta) {
 
-btn.onclick=async()=>{
-  const u=document.getElementById("user").value.trim();
-  const p=document.getElementById("pass").value.trim();
-  err.textContent="";
-
-  if(!u || !p){
-    err.textContent="Preencha usuário e senha.";
-    return;
+    localStorage.setItem("auth_relatorios", "true");  // libera acesso
+    
+    window.location.href = "admin.html";  // redireciona
+  } else {
+    document.getElementById("erro").style.display = "block";
   }
-
-  try{
-    const snap=await db.collection("usuarios").doc(u).get();
-    if(!snap.exists){
-      err.textContent="Usuário não encontrado.";
-      return;
-    }
-    const data=snap.data();
-    if(data.senha!==p){
-      err.textContent="Senha incorreta.";
-      return;
-    }
-
-    localStorage.setItem("auth_relatorios","true");
-    window.location.href="admin.html";
-
-  }catch(e){
-    console.error(e);
-    err.textContent="Erro ao conectar.";
-  }
-};
-</script>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Login — Relatórios de Campo</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
-
-<style>
-body{
-  margin:0;
-  background:#f3f6fb;
-  font-family:"Inter",sans-serif;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#111827;
 }
-.login-box{
-  width:94%;
-  max-width:360px;
-  background:#fff;
-  padding:26px 22px;
-  border-radius:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.12);
-}
-.title{
-  font-family:"Outfit";
-  font-size:1.4rem;
-  font-weight:800;
-  text-align:center;
-  margin-bottom:4px;
-}
-.sub{
-  font-size:.8rem;
-  text-align:center;
-  color:#6b7280;
-  margin-bottom:16px;
-}
-input{
-  width:100%;
-  padding:10px 12px;
-  margin-top:10px;
-  font-size:.9rem;
-  border-radius:10px;
-  border:1px solid #d1d5db;
-  outline:none;
-}
-button{
-  width:100%;
-  padding:11px 12px;
-  margin-top:16px;
-  border:none;
-  border-radius:10px;
-  font-size:.9rem;
-  font-weight:700;
-  cursor:pointer;
-  background:#2563eb;
-  color:#f9fafb;
-  box-shadow:0 6px 18px rgba(37,99,235,0.5);
-}
-.err{
-  color:#dc2626;
-  font-size:.8rem;
-  margin-top:10px;
-  text-align:center;
-}
-footer{
-  text-align:center;
-  margin-top:16px;
-  font-size:.75rem;
-  color:#6b7280;
-}
-</style>
-</head>
-<body>
-
-<div class="login-box">
-  <div class="title">Relatórios de Campo</div>
-  <div class="sub">Acesso restrito</div>
-
-  <input id="user" type="text" placeholder="Usuário">
-  <input id="pass" type="password" placeholder="Senha">
-
-  <button id="btnLogin">Entrar</button>
-
-  <div id="err" class="err"></div>
-
-  <footer>© 2025 • RSS3 – CMPC</footer>
-</div>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
-<script>
-// NOVO FIREBASE — substituído sem alterar nada no restante do código
-const firebaseConfig = {
-  apiKey: "AIzaSyC8loXqt9Vaup9baWt6cFhYU8ikX8BQv5U",
-  authDomain: "relatorio-rss3.firebaseapp.com",
-  projectId: "relatorio-rss3",
-  storageBucket: "relatorio-rss3.firebasestorage.app",
-  messagingSenderId: "540170198292",
-  appId: "1:540170198292:web:6edec9ab51983c22eb7601",
-  measurementId: "G-WYE6VL928H"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-</script>
-
-<script>
-const btn=document.getElementById("btnLogin");
-const err=document.getElementById("err");
-
-btn.onclick=async()=>{
-  const u=document.getElementById("user").value.trim();
-  const p=document.getElementById("pass").value.trim();
-  err.textContent="";
-
-  if(!u || !p){
-    err.textContent="Preencha usuário e senha.";
-    return;
-  }
-
-  try{
-    const snap=await db.collection("usuarios").doc(u).get();
-    if(!snap.exists){
-      err.textContent="Usuário não encontrado.";
-      return;
-    }
-    const data=snap.data();
-    if(data.senha!==p){
-      err.textContent="Senha incorreta.";
-      return;
-    }
-
-    localStorage.setItem("auth_relatorios","true");
-    window.location.href="admin.html";
-
-  }catch(e){
-    console.error(e);
-    err.textContent="Erro ao conectar.";
-  }
-};
 </script>
 
 </body>
