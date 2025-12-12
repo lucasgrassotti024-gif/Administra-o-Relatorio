@@ -400,7 +400,6 @@ body.sidebar-open .sidebar{
     <a href="planilha.html" class="sidebar-link">
       <span class="icon">📑</span><span>Planilha</span>
     </a>
-    <!-- NOVO ITEM: Planilha de Óleo em IBCs -->
     <a href="oleo-ibcs.html" class="sidebar-link">
       <span class="icon">🛢️</span><span>Óleo em IBCs</span>
     </a>
@@ -523,6 +522,7 @@ sidebarHandle.addEventListener("click",()=>{
 </script>
 
 <script>
+/* ===== Seletores ===== */
 const cardsEl=document.getElementById("cards");
 const emptyMsg=document.getElementById("emptyMsg");
 const infoCount=document.getElementById("infoCount");
@@ -539,13 +539,13 @@ const toastEl=document.getElementById("toast");
 let relatoriosAll=[];
 let relatoriosFiltrados=[];
 
+/* ===== util ===== */
 function showToast(msg,color="#16a34a"){
   toastEl.textContent=msg;
   toastEl.style.background=color;
   toastEl.classList.add("show");
   setTimeout(()=>toastEl.classList.remove("show"),2600);
 }
-
 modalClose.onclick=()=>modal.classList.remove("open");
 modal.onclick=e=>{
   if(e.target===modal) modal.classList.remove("open");
@@ -557,10 +557,58 @@ function formatDateBr(d){
     const [y,m,day]=d.split("-");
     return `${day}/${m}/${y}`;
   }
-  return d;
+  // se veio como timestamp do Firestore
+  if(d && typeof d.toDate === "function"){
+    const dt = d.toDate();
+    return `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
+  }
+  return String(d);
 }
 
-/* Render cards */
+/* ===== abrir modal com detalhes ===== */
+function abrirModal(r){
+  const pt = r.numeroPT || r.numeroPt || "—";
+  modalTitle.textContent=`PT ${pt} — ${formatDateBr(r.data||"")}`;
+  const h = r.horarios || {};
+  const esp = r.especificacoes || {};
+
+  modalContent.innerHTML=`
+    <div class="modal-grid">
+      <div class="modal-field"><span class="label">Equipamento</span><span class="value">${r.equipamento||"—"}</span></div>
+      <div class="modal-field"><span class="label">Placa</span><span class="value">${r.placa||"—"}</span></div>
+      <div class="modal-field"><span class="label">Local</span><span class="value">${r.local||"—"}</span></div>
+      <div class="modal-field"><span class="label">Tag</span><span class="value">${r.tag||"—"}</span></div>
+      <div class="modal-field"><span class="label">Solicitante</span><span class="value">${r.solicitante||"—"}</span></div>
+      <div class="modal-field"><span class="label">Emitente Abertura</span><span class="value">${r.emitenteAbertura||"—"}</span></div>
+      <div class="modal-field"><span class="label">Emitente Encerramento</span><span class="value">${r.emitenteEncerramento||"—"}</span></div>
+      <div class="modal-field"><span class="label">Operador</span><span class="value">${r.operador||"—"}</span></div>
+      <div class="modal-field"><span class="label">Ajudante</span><span class="value">${r.ajudante||"—"}</span></div>
+      <div class="modal-field"><span class="label">Tipo Atividade</span><span class="value">${esp.tipoAtividade||r.tipo||"—"}</span></div>
+      <div class="modal-field"><span class="label">Óleo</span><span class="value">${esp.oleo||r.oleo||"—"}</span></div>
+      <div class="modal-field"><span class="label">Qtd Óleo</span><span class="value">${esp.quantidade||r.quantidade||"—"}</span></div>
+      <div class="modal-field"><span class="label">Tipo Serviço</span><span class="value">${r.tipoServico||"—"}</span></div>
+    </div>
+
+    <div class="modal-section-title">Horários</div>
+    <div class="modal-grid">
+      <div class="modal-field"><span class="label">DDS & Checklist</span><span class="value">${h.ddsChecklist||"—"}</span></div>
+      <div class="modal-field"><span class="label">Disposição Coord.</span><span class="value">${h.disposicao||"—"}</span></div>
+      <div class="modal-field"><span class="label">Chegada ao Local</span><span class="value">${h.chegada||"—"}</span></div>
+      <div class="modal-field"><span class="label">Liberação da PT</span><span class="value">${h.liberacaoPT||"—"}</span></div>
+      <div class="modal-field"><span class="label">Início Atividade</span><span class="value">${h.inicio||"—"}</span></div>
+      <div class="modal-field"><span class="label">Fim Atividade</span><span class="value">${h.fim||"—"}</span></div>
+      <div class="modal-field"><span class="label">Início Intervalo</span><span class="value">${h.inicioIntervalo||"—"}</span></div>
+      <div class="modal-field"><span class="label">Fim Intervalo</span><span class="value">${h.fimIntervalo||"—"}</span></div>
+      <div class="modal-field"><span class="label">Troca de Turno</span><span class="value">${h.trocaTurno||"—"}</span></div>
+    </div>
+
+    <div class="modal-section-title">Observações</div>
+    <div style="font-size:.8rem;margin-top:6px;">${(r.observacoes||"—").replace(/\n/g,"<br>")}</div>
+  `;
+  modal.classList.add("open");
+}
+
+/* ===== renderizar cards ===== */
 function renderCards(){
   cardsEl.innerHTML="";
   if(relatoriosFiltrados.length===0){
@@ -608,33 +656,74 @@ function renderCards(){
   });
 }
 
-function abrirModal(r){
+/* ===== filtros ===== */
+filtroMes.onchange =
+filtroPlaca.oninput =
+filtroLocal.oninput = aplicarFiltros;
+
+function aplicarFiltros(){
+  const mes=filtroMes.value;
+  const placaTxt=filtroPlaca.value.trim().toLowerCase();
+  const localTxt=filtroLocal.value.trim().toLowerCase();
+
+  relatoriosFiltrados = relatoriosAll.filter(r=>{
+    if(r.data && mes){
+      const m=String(r.data).slice(5,7);
+      if(m!==mes) return false;
+    }
+    if(placaTxt && !(r.placa||"").toLowerCase().includes(placaTxt)) return false;
+    if(localTxt && !(r.local||"").toLowerCase().includes(localTxt)) return false;
+    return true;
+  });
+
+  renderCards();
+}
+
+/* ===== excluir (mover para excluídos) ===== */
+async function excluirRelatorio(r){
   const pt = r.numeroPT || r.numeroPt || "—";
-  modalTitle.textContent=`PT ${pt} — ${formatDateBr(r.data||"")}`;
-  const h = r.horarios || {};
-  const esp = r.especificacoes || {};
+  if(!confirm(`Mover PT ${pt} para Excluídos?`)) return;
+  try{
+    const data = Object.assign({}, r);
+    delete data.id;
+    // cria/atualiza doc com mesmo id em excluídos
+    await db.collection("relatoriosCampoExcluidos").doc(r.id).set(data);
+    // remove da coleção principal
+    await db.collection("relatoriosCampo").doc(r.id).delete();
+    showToast("Relatório movido para Excluídos.");
+    await carregarRelatorios();
+  }catch(err){
+    console.error("Erro ao excluir:",err);
+    showToast("Erro ao mover para excluídos.","#dc2626");
+  }
+}
 
-  modalContent.innerHTML=`
-    <div class="modal-grid">
-      <div class="modal-field"><span class="label">Equipamento</span><span class="value">${r.equipamento||"—"}</span></div>
-      <div class="modal-field"><span class="label">Placa</span><span class="value">${r.placa||"—"}</span></div>
-      <div class="modal-field"><span class="label">Local</span><span class="value">${r.local||"—"}</span></div>
-      <div class="modal-field"><span class="label">Tag</span><span class="value">${r.tag||"—"}</span></div>
-      <div class="modal-field"><span class="label">Solicitante</span><span class="value">${r.solicitante||"—"}</span></div>
-      <div class="modal-field"><span class="label">Emitente Abertura</span><span class="value">${r.emitenteAbertura||"—"}</span></div>
-      <div class="modal-field"><span class="label">Emitente Encerramento</span><span class="value">${r.emitenteEncerramento||"—"}</span></div>
-      <div class="modal-field"><span class="label">Operador</span><span class="value">${r.operador||"—"}</span></div>
-      <div class="modal-field"><span class="label">Ajudante</span><span class="value">${r.ajudante||"—"}</span></div>
-      <div class="modal-field"><span class="label">Tipo Atividade</span><span class="value">${esp.tipoAtividade||r.tipo||"—"}</span></div>
-      <div class="modal-field"><span class="label">Óleo</span><span class="value">${esp.oleo||r.oleo||"—"}</span></div>
-      <div class="modal-field"><span class="label">Qtd Óleo</span><span class="value">${esp.quantidade||r.quantidade||"—"}</span></div>
-      <div class="modal-field"><span class="label">Tipo Serviço</span><span class="value">${r.tipoServico||"—"}</span></div>
-    </div>
+/* ===== carregar relatórios (ativos) ===== */
+async function carregarRelatorios(){
+  try{
+    infoCount.textContent="Carregando dados do Firebase...";
+    const snap = await db.collection("relatoriosCampo").orderBy("numeroPT","desc").get();
+    relatoriosAll = snap.docs.map(doc => {
+      const d = doc.data();
+      return {
+        id: doc.id,
+        ...d
+      };
+    });
 
-    <div class="modal-section-title">Horários</div>
-    <div class="modal-grid">
-      <div class="modal-field"><span class="label">DDS & Checklist</span><span class="value">${h.ddsChecklist||"—"}</span></div>
-      <div class="modal-field"><span class="label">Disposição Coord.</span><span class="value">${h.disposicao||"—"}</span></div>
-      <div class="modal-field"><span class="label">Chegada ao Local</span><span class="value">${h.chegada||"—"}</span></div>
-      <div class="modal-field"><span class="label">Liberação da PT</span><span class="value">${h.liberacaoPT||"—"}</span></div>
-      <div class="modal-field"><span class="label">Início Atividade</span><span class="value">${h.inicio||"—"}</span></div>0
+    // opcional: também poderíamos mostrar/exibir excluídos se você quiser
+    relatoriosFiltrados = [...relatoriosAll];
+    aplicarFiltros();
+    infoCount.textContent=`${relatoriosAll.length} relatório(s) carregado(s)`;
+  }catch(err){
+    console.error("Erro ao carregar relatórios:",err);
+    infoCount.textContent="Erro ao carregar dados. Veja o console.";
+  }
+}
+
+/* inicial */
+carregarRelatorios();
+</script>
+
+</body>
+</html>
