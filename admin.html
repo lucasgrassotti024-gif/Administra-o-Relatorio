@@ -480,16 +480,16 @@ body.sidebar-open .sidebar{
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 // ==========================================================
-// * ATUALIZADO: Usando as credenciais do seu index.html *
+// ⭐ ATUALIZADO: Usando as credenciais do novo projeto: relatorio-rss3-15896
 // ==========================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyCUJmfp0tSjU3f5O1mjckd_UL5FhohDPTM",
-  authDomain: "hidrojato-rss3.firebaseapp.com",
-  projectId: "hidrojato-rss3",
-  storageBucket: "hidrojato-rss3.firebasestorage.app",
-  messagingSenderId: "318770594822",
-  appId: "1:318770594822:web:68c9c199c67632f4c96f87",
-  measurementId: "G-WNNYF6M9CR"
+  apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
+  authDomain: "relatorio-rss3-15896.firebaseapp.com",
+  projectId: "relatorio-rss3-15896",
+  storageBucket: "relatorio-rss3-15896.firebasestorage.app",
+  messagingSenderId: "905086909082",
+  appId: "1:905086909082:web:7535afa8dddbd7b691fd23",
+  measurementId: "G-EPGW3FGXX5"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -556,12 +556,12 @@ function formatDateBr(d){
   if(!d) return "";
   if(typeof d==="string" && d.includes("-")){
     const [y,m,day]=d.split("-");
-    return ${day}/${m}/${y};
+    return `${day}/${m}/${y}`;
   }
   // se veio como timestamp do Firestore
   if(d && typeof d.toDate === "function"){
     const dt = d.toDate();
-    return ${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()};
+    return `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
   }
   return String(d);
 }
@@ -569,7 +569,7 @@ function formatDateBr(d){
 /* ===== abrir modal com detalhes ===== */
 function abrirModal(r){
   const pt = r.numeroPT || r.numeroPt || "—";
-  modalTitle.textContent=PT ${pt} — ${formatDateBr(r.data||"")};
+  modalTitle.textContent=`PT ${pt} — ${formatDateBr(r.data||"")}`;
   const h = r.horarios || {};
   const esp = r.especificacoes || {};
 
@@ -618,7 +618,7 @@ function renderCards(){
     return;
   }
   emptyMsg.style.display="none";
-  infoCount.textContent=${relatoriosFiltrados.length} relatório(s) encontrados;
+  infoCount.textContent=`${relatoriosFiltrados.length} relatório(s) encontrados`;
 
   relatoriosFiltrados.forEach(r=>{
     const card=document.createElement("article");
@@ -683,7 +683,7 @@ function aplicarFiltros(){
 /* ===== excluir (mover para excluídos) ===== */
 async function excluirRelatorio(r){
   const pt = r.numeroPT || r.numeroPt || "—";
-  if(!confirm(Mover PT ${pt} para Excluídos?)) return;
+  if(!confirm(`Mover PT ${pt} para Excluídos?`)) return;
   try{
     const data = Object.assign({}, r);
     delete data.id;
@@ -715,7 +715,7 @@ async function carregarRelatorios(){
     // opcional: também poderíamos mostrar/exibir excluídos se você quiser
     relatoriosFiltrados = [...relatoriosAll];
     aplicarFiltros();
-    infoCount.textContent=${relatoriosAll.length} relatório(s) carregado(s);
+    infoCount.textContent=`${relatoriosAll.length} relatório(s) carregado(s)`;
   }catch(err){
     console.error("Erro ao carregar relatórios:",err);
     infoCount.textContent="Erro ao carregar dados. Veja o console.";
