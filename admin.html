@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
 
 <style>
+/* --- ESTILOS (Mantidos do seu código original) --- */
 :root {
   --primary:#2563eb;
   --accent:#1d4ed8;
@@ -380,7 +381,6 @@ body.sidebar-open .sidebar{
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-title-block">
@@ -417,7 +417,6 @@ body.sidebar-open .sidebar{
 
 <div class="topbar-mobile">Admin — Relatórios</div>
 
-<!-- MAIN -->
 <div class="main-wrapper">
   <header class="page-header">
     <div>
@@ -465,7 +464,6 @@ body.sidebar-open .sidebar{
   </footer>
 </div>
 
-<!-- MODAL DETALHES -->
 <div id="modal" class="modal">
   <div class="modal-box">
     <div class="modal-header">
@@ -478,24 +476,27 @@ body.sidebar-open .sidebar{
 
 <div id="toast" class="toast"></div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
+// ==========================================================
+// * ATUALIZADO: Usando as credenciais do seu index.html *
+// ==========================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyBIihMuDH951zhIqey5pcCY5hFRQv-jm2I",
-  authDomain: "hidrojato-rss3-3f04a.firebaseapp.com",
-  projectId: "hidrojato-rss3-3f04a",
-  storageBucket: "hidrojato-rss3-3f04a.firebasestorage.app",
-  messagingSenderId: "607637004872",
-  appId: "1:607637004872:web:ffe7b32d1e92d80d4c2e7d",
-  measurementId: "G-PPZLMT6ZPL"
+  apiKey: "AIzaSyCUJmfp0tSjU3f5O1mjckd_UL5FhohDPTM",
+  authDomain: "hidrojato-rss3.firebaseapp.com",
+  projectId: "hidrojato-rss3",
+  storageBucket: "hidrojato-rss3.firebasestorage.app",
+  messagingSenderId: "318770594822",
+  appId: "1:318770594822:web:68c9c199c67632f4c96f87",
+  measurementId: "G-WNNYF6M9CR"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 </script>
 
 <script>
+/* --- LÓGICA JAVASCRIPT (Mantida do seu código original) --- */
 // Proteção básica (comente se não quiser)
 if(localStorage.getItem("auth_relatorios")!=="true"){
   // window.location.href="index.html";
@@ -555,12 +556,12 @@ function formatDateBr(d){
   if(!d) return "";
   if(typeof d==="string" && d.includes("-")){
     const [y,m,day]=d.split("-");
-    return `${day}/${m}/${y}`;
+    return ${day}/${m}/${y};
   }
   // se veio como timestamp do Firestore
   if(d && typeof d.toDate === "function"){
     const dt = d.toDate();
-    return `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
+    return ${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()};
   }
   return String(d);
 }
@@ -568,7 +569,7 @@ function formatDateBr(d){
 /* ===== abrir modal com detalhes ===== */
 function abrirModal(r){
   const pt = r.numeroPT || r.numeroPt || "—";
-  modalTitle.textContent=`PT ${pt} — ${formatDateBr(r.data||"")}`;
+  modalTitle.textContent=PT ${pt} — ${formatDateBr(r.data||"")};
   const h = r.horarios || {};
   const esp = r.especificacoes || {};
 
@@ -617,7 +618,7 @@ function renderCards(){
     return;
   }
   emptyMsg.style.display="none";
-  infoCount.textContent=`${relatoriosFiltrados.length} relatório(s) encontrados`;
+  infoCount.textContent=${relatoriosFiltrados.length} relatório(s) encontrados;
 
   relatoriosFiltrados.forEach(r=>{
     const card=document.createElement("article");
@@ -682,7 +683,7 @@ function aplicarFiltros(){
 /* ===== excluir (mover para excluídos) ===== */
 async function excluirRelatorio(r){
   const pt = r.numeroPT || r.numeroPt || "—";
-  if(!confirm(`Mover PT ${pt} para Excluídos?`)) return;
+  if(!confirm(Mover PT ${pt} para Excluídos?)) return;
   try{
     const data = Object.assign({}, r);
     delete data.id;
@@ -714,7 +715,7 @@ async function carregarRelatorios(){
     // opcional: também poderíamos mostrar/exibir excluídos se você quiser
     relatoriosFiltrados = [...relatoriosAll];
     aplicarFiltros();
-    infoCount.textContent=`${relatoriosAll.length} relatório(s) carregado(s)`;
+    infoCount.textContent=${relatoriosAll.length} relatório(s) carregado(s);
   }catch(err){
     console.error("Erro ao carregar relatórios:",err);
     infoCount.textContent="Erro ao carregar dados. Veja o console.";
