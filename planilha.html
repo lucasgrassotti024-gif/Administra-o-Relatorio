@@ -398,7 +398,6 @@ footer{
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-title-block">
@@ -435,7 +434,6 @@ footer{
 
 <div class="topbar-mobile">Planilha — Relatórios</div>
 
-<!-- PAINEL DE FILTRO POR COLUNA -->
 <div id="colFilterPanel">
   <div id="colFilterTitle">Filtrar</div>
   <div id="colFilterList"></div>
@@ -445,7 +443,6 @@ footer{
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main-wrapper">
   <header class="page-header">
     <div>
@@ -454,7 +451,6 @@ footer{
     </div>
   </header>
 
-  <!-- AÇÕES DA PLANILHA -->
   <div class="table-actions">
     <button type="button" id="btnToggleAdvanced">
       <span id="labelAdvanced">Mostrar colunas avançadas</span>
@@ -468,12 +464,10 @@ footer{
     <table id="sheetTable">
       <thead>
         <tr id="sheetHeaderRow">
-          <!-- cabeçalho montado via JS -->
-        </tr>
+          </tr>
       </thead>
       <tbody id="sheetBody">
-        <!-- linhas montadas via JS -->
-      </tbody>
+        </tbody>
     </table>
   </div>
 
@@ -481,7 +475,6 @@ footer{
     © 2025 | Relatórios de Campo — Planilha
   </footer>
 </div>
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
@@ -916,12 +909,12 @@ btnExportCsv.addEventListener("click",()=>{
   URL.revokeObjectURL(url);
 });
 
-/* ===== Carregar relatórios ===== */
-async function carregarRelatorios(){
-  try{
-    subtitleInfo.textContent="Carregando dados do Firebase...";
-    const snap=await db.collection("relatoriosCampo").orderBy("numeroPT","desc").get();
-
+/* ===== Carregar relatórios REALTIME ===== */
+function carregarRelatoriosRealtime(){
+  subtitleInfo.textContent="Carregando dados do Firebase...";
+  
+  // O onSnapshot substitui o .get() para atualizar em tempo real
+  db.collection("relatoriosCampo").orderBy("numeroPT","desc").onSnapshot((snap) => {
     relatoriosRaw=[];
     snap.docs.forEach(doc=>{
       const d = doc.data();
@@ -941,7 +934,6 @@ async function carregarRelatorios(){
 
       relatoriosRaw.push({
         id: doc.id,
-
         numeroPT: d.numeroPT ?? d.numeroPt ?? "",
         data: d.data || "",
         diaSemana: d.diaSemana || "",
@@ -955,7 +947,6 @@ async function carregarRelatorios(){
         operador: d.operador || "",
         ajudante: d.ajudante || "",
         tipoServico: d.tipoServico || e.tipoServico || "",
-
         h_ddsChecklist: h.ddsChecklist || "",
         h_disposicao:   h.disposicao   || "",
         h_chegada:      h.chegada      || "",
@@ -965,14 +956,11 @@ async function carregarRelatorios(){
         h_fimIntervalo: h.fimIntervalo || "",
         h_fim:          h.fim          || "",
         h_trocaTurno:   h.trocaTurno   || "",
-
         tipoAtividade: e.tipoAtividade || d.tipoAtividade || "",
         oleo:          e.oleo          || d.oleo          || "",
         quantidade:    e.quantidade    || d.quantidade    || "",
-
         encerramentoPt: d.encerramentoPt || "",
         motivoNaoFinalizada: d.motivoNaoFinalizada || "",
-
         duracaoMinutos: d.duracaoMinutos ?? "",
         observacoes:    d.observacoes || "",
         criadoEm:       criadoEmStr,
@@ -981,16 +969,16 @@ async function carregarRelatorios(){
       });
     });
 
-    subtitleInfo.textContent=`${relatoriosRaw.length} relatório(s) carregado(s)`;
-    renderHeader();
+    if(sheetHeaderRow.innerHTML==="") renderHeader();
     aplicarFiltrosEAtualizar();
-  }catch(err){
-    console.error("Erro ao carregar relatórios:",err);
-    subtitleInfo.textContent="Erro ao carregar dados. Veja o console.";
-  }
+  }, (err) => {
+    console.error("Erro no realtime:", err);
+    subtitleInfo.textContent="Erro ao sincronizar.";
+  });
 }
 
-carregarRelatorios();
+// Inicia a escuta em tempo real
+carregarRelatoriosRealtime();
 </script>
 
 </body>
