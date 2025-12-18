@@ -18,11 +18,9 @@
   --border:#e5e7eb;
   --shadow-soft:0 10px 30px rgba(15,23,42,0.10);
   --shadow-hard:0 18px 45px rgba(15,23,42,0.20);
-
   --sidebar-bg:#ffffff;
   --sidebar-text:#111827;
   --sidebar-link:#111827;
-
   --table-header-bg:rgba(37,99,235,0.06);
   --table-header-border:#cbd5f5;
   --table-row-alt:rgba(15,23,42,0.015);
@@ -35,11 +33,9 @@
   --border:#111827;
   --shadow-soft:0 10px 30px rgba(0,0,0,0.60);
   --shadow-hard:0 18px 45px rgba(0,0,0,0.80);
-
   --sidebar-bg:#020617;
   --sidebar-text:#e5e7eb;
   --sidebar-link:#e5e7eb;
-
   --table-header-bg:rgba(15,23,42,0.92);
   --table-header-border:#1e293b;
   --table-row-alt:rgba(15,23,42,0.45);
@@ -51,7 +47,6 @@
   transition:background-color .25s ease,color .25s ease,border-color .25s ease;
 }
 
-/* FUNDO */
 body{
   margin:0;
   background:var(--bg);
@@ -75,7 +70,7 @@ body{
   z-index:40;
   box-shadow:var(--shadow-hard);
   transform:translateX(-100%);
-  transition:transform .25s ease, background-color .25s ease, color .25s ease;
+  transition:transform .25s ease;
 }
 body.sidebar-open .sidebar{
   transform:translateX(0);
@@ -128,20 +123,14 @@ body.sidebar-open .sidebar{
   color:var(--sidebar-link);
   cursor:pointer;
 }
-.sidebar-link span.icon{width:18px;text-align:center;}
-.sidebar-link:hover,
 .sidebar-link.active{
   background:rgba(37,99,235,0.15);
+  font-weight: 600;
 }
-.sidebar-footer{
-  margin-top:auto;
-  font-size:.7rem;
-  color:var(--muted);
-  border-top:1px solid rgba(148,163,184,0.3);
-  padding-top:8px;
+.sidebar-link:hover:not(.active) {
+  background:rgba(37,99,235,0.05);
 }
 
-/* BOTÃO FLOANTE SIDEBAR */
 .sidebar-handle{
   position:fixed;
   top:14px;
@@ -161,7 +150,7 @@ body.sidebar-open .sidebar{
   font-size:1.1rem;
 }
 
-/* MAIN WRAPPER */
+/* MAIN */
 .main-wrapper{
   flex:1;
   min-height:100vh;
@@ -170,12 +159,9 @@ body.sidebar-open .sidebar{
   flex-direction:column;
 }
 @media(max-width:900px){
-  .main-wrapper{
-    padding-top:56px;
-  }
+  .main-wrapper{ padding-top:56px; }
 }
 
-/* TOPBAR MOBILE */
 .topbar-mobile{
   position:fixed;
   top:0;left:0;right:0;
@@ -189,30 +175,14 @@ body.sidebar-open .sidebar{
   font-weight:700;
   font-size:.9rem;
   z-index:30;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-@media(min-width:901px){
-  .topbar-mobile{display:none;}
-}
+@media(min-width:901px){ .topbar-mobile{display:none;} }
 
-/* HEADER */
-.page-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-end;
-  gap:12px;
-  margin-bottom:10px;
-}
-.page-title{
-  font-family:"Outfit";
-  font-weight:800;
-  font-size:1.4rem;
-}
-.page-sub{
-  font-size:.8rem;
-  color:var(--muted);
-}
+.page-header{ margin-bottom:10px; }
+.page-title{ font-family:"Outfit"; font-weight:800; font-size:1.4rem; }
+.page-sub{ font-size:.8rem; color:var(--muted); height: 1.2rem; }
 
-/* AÇÕES / RESUMO */
 .table-actions{
   display:flex;
   flex-wrap:wrap;
@@ -222,59 +192,30 @@ body.sidebar-open .sidebar{
   align-items:center;
 }
 
-/* Card de resumo */
 .stats-card{
   background:var(--card);
   border-radius:14px;
-  padding:10px 14px;
+  padding:12px 16px;
   box-shadow:var(--shadow-soft);
   border:1px solid var(--table-header-border);
   display:flex;
   flex-direction:column;
-  min-width:220px;
+  min-width:240px;
 }
-.stats-title{
-  font-size:.8rem;
-  font-weight:600;
-  color:var(--muted);
-  margin-bottom:4px;
-}
-/* Removemos o texto, mas mantemos o espaçamento se quiser */
-.stats-title::before{
-  content:"";
-}
-.stats-row{
-  display:flex;
-  gap:14px;
-  align-items:baseline;
-}
-.stats-big{
-  font-size:1.2rem;
-  font-weight:800;
-  color:var(--primary);
-}
-.stats-label{
-  font-size:.8rem;
-  color:var(--muted);
-}
+.stats-row{ display:flex; gap:20px; align-items:baseline; }
+.stats-big{ font-size:1.3rem; font-weight:800; color:var(--primary); }
+.stats-label{ font-size:.75rem; color:var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
-/* Filtro mês */
-.filter-mes{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:.8rem;
-}
 .filter-mes select{
-  padding:6px 9px;
-  border-radius:999px;
+  padding:8px 12px;
+  border-radius:10px;
   border:1px solid var(--border);
   background:var(--card);
-  font-size:.8rem;
+  font-size:.85rem;
   color:var(--text);
+  outline: none;
 }
 
-/* WRAPPER DA TABELA (drag-scroll) */
 .table-wrapper{
   margin-top:12px;
   background:var(--card);
@@ -285,56 +226,20 @@ body.sidebar-open .sidebar{
   overflow:auto;
   cursor:grab;
 }
-.table-wrapper.dragging{
-  cursor:grabbing;
-}
+.table-wrapper.dragging{ cursor:grabbing; }
 
-/* TABELA */
-table{
-  border-collapse:collapse;
-  min-width:900px;
-  background:var(--card);
-}
-thead{
-  position:sticky;
-  top:0;
-  z-index:5;
-  background:var(--table-header-bg);
-  box-shadow:0 2px 4px rgba(15,23,42,0.08);
-}
-th,td{
-  border:1px solid var(--border);
-  padding:6px 8px;
-  font-size:.8rem;
-  white-space:nowrap;
-}
-th{
-  background:var(--table-header-bg);
-  border-bottom:1px solid var(--table-header-border);
-  font-weight:700;
-  text-align:left;
-}
+table{ border-collapse:collapse; min-width:900px; width: 100%; }
+thead{ position:sticky; top:0; z-index:5; background:var(--table-header-bg); }
+th,td{ border:1px solid var(--border); padding:10px 12px; font-size:.8rem; white-space:nowrap; }
+th{ font-weight:700; text-align:left; color: var(--primary); }
+tbody tr:nth-child(even){ background:var(--table-row-alt); }
+tbody tr:hover{ background:rgba(37,99,235,0.06); }
 
-/* LINHAS ZEBRADAS + HOVER */
-tbody tr:nth-child(even){
-  background:var(--table-row-alt);
-}
-tbody tr:hover{
-  background:rgba(37,99,235,0.06);
-}
-
-/* RODAPÉ */
-footer{
-  margin-top:10px;
-  font-size:.75rem;
-  color:var(--muted);
-  text-align:center;
-}
+footer{ margin-top:20px; font-size:.75rem; color:var(--muted); text-align:center; padding: 10px; }
 </style>
 </head>
-<body>
+<body class="sidebar-open">
 
-<!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-title-block">
@@ -345,75 +250,56 @@ footer{
   </div>
 
   <nav class="sidebar-nav">
-    <a href="admin.html" class="sidebar-link">
-      <span class="icon">📋</span><span>Admin</span>
-    </a>
-    <a href="dashboard.html" class="sidebar-link">
-      <span class="icon">📊</span><span>Dashboard</span>
-    </a>
-    <a href="planilha.html" class="sidebar-link">
-      <span class="icon">📑</span><span>Planilha</span>
-    </a>
-    <a href="oleo-ibcs.html" class="sidebar-link active">
-      <span class="icon">🛢️</span><span>Óleo em IBCs</span>
-    </a>
-    <a href="excluidos.html" class="sidebar-link">
-      <span class="icon">🗑️</span><span>Excluídos</span>
-    </a>
+    <a href="admin.html" class="sidebar-link"><span class="icon">📋</span><span>Admin</span></a>
+    <a href="dashboard.html" class="sidebar-link"><span class="icon">📊</span><span>Dashboard</span></a>
+    <a href="planilha.html" class="sidebar-link"><span class="icon">📑</span><span>Planilha</span></a>
+    <a href="oleo-ibcs.html" class="sidebar-link active"><span class="icon">🛢️</span><span>Óleo em IBCs</span></a>
+    <a href="excluidos.html" class="sidebar-link"><span class="icon">🗑️</span><span>Excluídos</span></a>
   </nav>
 
-  <div class="sidebar-footer">
-    Planilha de óleo<br>Descartado em IBCs.
-  </div>
+  <div class="sidebar-footer">Planilha de óleo<br>Descartado em IBCs.</div>
 </aside>
 
 <button id="sidebarHandle" class="sidebar-handle" type="button">☰</button>
-
 <div class="topbar-mobile">Planilha — Óleo em IBCs</div>
 
-<!-- MAIN -->
 <div class="main-wrapper">
   <header class="page-header">
     <div>
-      <div class="page-title">Planilha — Óleo em IBCs</div>
-      <!-- Mantemos o elemento, mas não mostraremos mais contagem final -->
-      <div class="page-sub" id="subtitleInfo">Carregando dados...</div>
+      <div class="page-title">Relatório de Óleo em IBCs</div>
+      <div class="page-sub" id="subtitleInfo">Sincronizando com Firebase...</div>
     </div>
   </header>
 
-  <!-- RESUMO + FILTRO -->
   <div class="table-actions">
     <div class="stats-card">
-      <!-- Título removido (sem texto) -->
-      <div class="stats-title"></div>
       <div class="stats-row">
         <div>
           <div class="stats-big" id="statsLitros">0</div>
-          <div class="stats-label">Litros de óleo</div>
+          <div class="stats-label">Total Litros</div>
         </div>
         <div>
           <div class="stats-big" id="statsAtividades">0</div>
-          <div class="stats-label">Atividades</div>
+          <div class="stats-label">Registros</div>
         </div>
       </div>
     </div>
 
     <div class="filter-mes">
-      <span>Mês:</span>
       <select id="filtroMes">
-        <option value="">Todos</option>
-        <option value="01">Jan</option>
-        <option value="02">Fev</option>
-        <option value="03">Mar</option>
-        <option value="04">Abr</option>
-        <option value="05">Mai</option>
-        <option value="06">Jun</option>
-        <option value="07">Jul</option>
-        <option value="08">Ago</option>
-        <option value="09">Set</option>
-        <option value="10">Out</option>
-        <option value="11">Nov</option>
-        <option value="12">Dez</option>
+        <option value="">Todos os Meses</option>
+        <option value="01">Janeiro</option>
+        <option value="02">Fevereiro</option>
+        <option value="03">Março</option>
+        <option value="04">Abril</option>
+        <option value="05">Maio</option>
+        <option value="06">Junho</option>
+        <option value="07">Julho</option>
+        <option value="08">Agosto</option>
+        <option value="09">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
       </select>
     </div>
   </div>
@@ -427,12 +313,9 @@ footer{
     </table>
   </div>
 
-  <footer>
-    © 2025 | Relatórios de Campo — Óleo em IBCs
-  </footer>
+  <footer>© 2025 | Sistema RSS3 - Gestão de Resíduos</footer>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
@@ -445,258 +328,147 @@ const firebaseConfig = {
   appId: "1:540170198292:web:6edec9ab51983c22eb7601",
   measurementId: "G-WYE6VL928H"
 };
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 </script>
 
 <script>
-// Proteção básica (mesmo esquema)
-if(localStorage.getItem("auth_relatorios")!=="true"){
-  // window.location.href="index.html";
+/* TEMA E UI */
+const themeToggle = document.getElementById("themeToggle");
+const sidebarHandle = document.getElementById("sidebarHandle");
+
+if(localStorage.getItem("tema") === "dark"){
+  document.body.classList.add("dark");
+  themeToggle.textContent = "☀️";
 }
 
-/* Tema */
-const themeToggle=document.getElementById("themeToggle");
-if(localStorage.getItem("tema")==="dark"){
-  document.body.classList.add("dark");
-  themeToggle.textContent="☀️";
-}
-themeToggle.onclick=()=>{
+themeToggle.onclick = () => {
   document.body.classList.toggle("dark");
-  const dark=document.body.classList.contains("dark");
-  themeToggle.textContent=dark?"☀️":"🌙";
-  localStorage.setItem("tema",dark?"dark":"light");
+  const isDark = document.body.classList.contains("dark");
+  themeToggle.textContent = isDark ? "☀️" : "🌙";
+  localStorage.setItem("tema", isDark ? "dark" : "light");
 };
 
-/* Sidebar */
-const sidebarHandle=document.getElementById("sidebarHandle");
-sidebarHandle.addEventListener("click",()=>{
-  document.body.classList.toggle("sidebar-open");
-});
-</script>
+sidebarHandle.onclick = () => document.body.classList.toggle("sidebar-open");
 
-<script>
-const tableWrapper=document.getElementById("tableWrapper");
-const sheetHeaderRow=document.getElementById("sheetHeaderRow");
-const sheetBody=document.getElementById("sheetBody");
-const subtitleInfo=document.getElementById("subtitleInfo");
-const filtroMes=document.getElementById("filtroMes");
-const statsLitros=document.getElementById("statsLitros");
-const statsAtividades=document.getElementById("statsAtividades");
-
-// drag-scroll horizontal
-let isDown=false,startX,scrollLeft;
-tableWrapper.addEventListener("mousedown",(e)=>{
-  isDown=true;
-  tableWrapper.classList.add("dragging");
-  startX=e.pageX - tableWrapper.offsetLeft;
-  scrollLeft=tableWrapper.scrollLeft;
-});
-tableWrapper.addEventListener("mouseleave",()=>{isDown=false;tableWrapper.classList.remove("dragging");});
-tableWrapper.addEventListener("mouseup",()=>{isDown=false;tableWrapper.classList.remove("dragging");});
-tableWrapper.addEventListener("mousemove",(e)=>{
-  if(!isDown) return;
-  e.preventDefault();
-  const x=e.pageX - tableWrapper.offsetLeft;
-  const walk=x-startX;
-  tableWrapper.scrollLeft = scrollLeft - walk;
-});
-
-// touch
-tableWrapper.addEventListener("touchstart",(e)=>{
-  isDown=true;
-  tableWrapper.classList.add("dragging");
-  startX=e.touches[0].pageX - tableWrapper.offsetLeft;
-  scrollLeft=tableWrapper.scrollLeft;
-},{passive:true});
-tableWrapper.addEventListener("touchend",()=>{isDown=false;tableWrapper.classList.remove("dragging");});
-tableWrapper.addEventListener("touchmove",(e)=>{
-  if(!isDown) return;
-  const x=e.touches[0].pageX - tableWrapper.offsetLeft;
-  const walk=x-startX;
-  tableWrapper.scrollLeft = scrollLeft - walk;
-},{passive:true});
-
-/* ===== Colunas da planilha de óleo em IBCs ===== */
-const columns=[
-  {key:"numeroPT",            label:"Nº PT"},
-  {key:"data",                label:"Data"},
-  {key:"diaSemana",           label:"Dia Semana"},
-  {key:"equipamento",         label:"Equipamento"},
-  {key:"placa",               label:"Placa"},
-  {key:"local",               label:"Local"},
-  {key:"tipoServico",         label:"Tipo Serviço"},
-  {key:"quantidade",          label:"Qtd (texto)"},
-  {key:"litros",              label:"Litros (calc.)"},
-  {key:"ondeDescartadoTexto", label:"Descartado em"},
-  {key:"operador",            label:"Operador"},
-  {key:"ajudante",            label:"Ajudante"}
+/* LOGICA DA TABELA */
+const columns = [
+  {key:"numeroPT", label:"Nº PT"},
+  {key:"data", label:"Data"},
+  {key:"equipamento", label:"Equipamento"},
+  {key:"local", label:"Local"},
+  {key:"tipoServico", label:"Serviço"},
+  {key:"quantidade", label:"Qtd Inf."},
+  {key:"litros", label:"Litros Est."},
+  {key:"ondeDescartadoTexto", label:"Destino"},
+  {key:"operador", label:"Operador"}
 ];
 
-let relatoriosAll=[];
-let relatoriosFiltrados=[];
+let relatoriosAll = [];
 
-/* ===== Util: converte quantidade em litros =====
-   Regras:
-   - Se tiver "IBC" no texto -> interpreta número como quantidade de IBCs (1 IBC = 1000 L)
-   - Caso contrário, pega o número e assume que é litros direto (ex.: "500 L" -> 500)
-*/
+// Função de cálculo melhorada
 function quantidadeToLitros(q){
   if(!q) return 0;
-  const txt=String(q).trim();
-  if(!txt) return 0;
-  const lower=txt.toLowerCase();
-
-  // extrai primeiro número do texto
-  const match = lower.match(/[\d.,]+/);
+  const txt = String(q).toLowerCase();
+  const match = txt.match(/[\d.,]+/);
   if(!match) return 0;
-  let numStr=match[0].replace(/\./g,"").replace(",",".");
-  let valor=parseFloat(numStr);
-  if(isNaN(valor) || valor<=0) return 0;
-
-  if(lower.includes("ibc")){
-    // trata como quantidade de IBCs
-    return valor*1000;
-  }
-  // trata como litros diretamente
-  return valor;
+  let valor = parseFloat(match[0].replace(/\./g,"").replace(",","."));
+  if(isNaN(valor)) return 0;
+  
+  // Se mencionar IBC, multiplica por 1000
+  return txt.includes("ibc") ? valor * 1000 : valor;
 }
 
-/* ===== Cabeçalho ===== */
 function renderHeader(){
-  sheetHeaderRow.innerHTML="";
-  columns.forEach(col=>{
-    const th=document.createElement("th");
-    th.textContent=col.label;
-    sheetHeaderRow.appendChild(th);
-  });
+  const hr = document.getElementById("sheetHeaderRow");
+  hr.innerHTML = columns.map(col => `<th>${col.label}</th>`).join("");
 }
 
-/* ===== Corpo ===== */
-function renderBody(){
-  sheetBody.innerHTML="";
-  relatoriosFiltrados.forEach(r=>{
-    const tr=document.createElement("tr");
-    columns.forEach(col=>{
-      const td=document.createElement("td");
-      let val=r[col.key];
-
-      if(col.key==="data" && r.data){
-        // data no formato YYYY-MM-DD -> DD/MM/YYYY
-        if(typeof r.data==="string" && r.data.includes("-")){
-          const [y,m,d]=r.data.split("-");
+function renderTable(data){
+  const tbody = document.getElementById("sheetBody");
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      ${columns.map(col => {
+        let val = r[col.key] || "";
+        if(col.key === "data" && val.includes("-")){
+          const [y,m,d] = val.split("-");
           val = `${d}/${m}/${y}`;
         }
-      }
-
-      if(col.key==="litros"){
-        val = r.litros > 0
-          ? r.litros.toLocaleString("pt-BR",{minimumFractionDigits:0, maximumFractionDigits:0})
-          : "";
-      }
-
-      if(val==null) val="";
-      td.textContent=String(val);
-      tr.appendChild(td);
-    });
-    sheetBody.appendChild(tr);
-  });
+        if(col.key === "litros"){
+          val = val > 0 ? val.toLocaleString("pt-BR") : "0";
+        }
+        return `<td>${val}</td>`;
+      }).join("")}
+    </tr>
+  `).join("");
 }
 
-/* ===== Atualiza resumo (card) ===== */
-function atualizarResumo(){
-  const totalAtividades = relatoriosFiltrados.length;
-  let totalLitros = 0;
-  relatoriosFiltrados.forEach(r=>{
-    totalLitros += r.litros || 0;
-  });
-
-  statsAtividades.textContent = totalAtividades;
-  statsLitros.textContent = totalLitros.toLocaleString("pt-BR",{
-    minimumFractionDigits:0,
-    maximumFractionDigits:0
-  });
-
-  // Não mostramos mais a frase "X atividade(s)..." abaixo do título
+function updateStats(data){
+  const totalLitros = data.reduce((acc, curr) => acc + (curr.litros || 0), 0);
+  document.getElementById("statsLitros").textContent = totalLitros.toLocaleString("pt-BR");
+  document.getElementById("statsAtividades").textContent = data.length;
 }
 
-/* ===== Filtro por mês ===== */
-function aplicarFiltros(){
-  const mes=filtroMes.value; // "01".."12" ou ""
+async function carregarDados(){
+  const info = document.getElementById("subtitleInfo");
+  try {
+    // Escuta em tempo real (onSnapshot) para ser igual ao Admin
+    db.collection("relatoriosCampo")
+      .orderBy("numeroPT", "desc")
+      .onSnapshot(snap => {
+        relatoriosAll = [];
+        snap.forEach(doc => {
+          const d = doc.data();
+          const e = d.especificacoes || {};
 
-  relatoriosFiltrados = relatoriosAll.filter(r=>{
-    if(!mes) return true;
-    if(!r.data) return false;
-    const m = String(r.data).slice(5,7);
-    return m===mes;
-  });
-
-  renderBody();
-  atualizarResumo();
-}
-
-filtroMes.addEventListener("change",aplicarFiltros);
-
-/* ===== Carregar relatórios ===== */
-async function carregarRelatorios(){
-  try{
-    subtitleInfo.textContent="Carregando dados do Firebase...";
-    const snap=await db.collection("relatoriosCampo").orderBy("numeroPT","desc").get();
-
-    relatoriosAll=[];
-
-    snap.docs.forEach(doc=>{
-      const d = doc.data();
-      const e = d.especificacoes || {};
-
-      const oleoVal   = e.oleo || d.oleo || "";
-      const tipoAtiv  = e.tipoAtividade || d.tipoAtividade || "";
-      const ondeTipo  = e.ondeDescartadoTipo || "";
-      const ondeTexto = e.ondeDescartadoTexto || "";
-
-      // Filtra apenas:
-      // - Óleo = "Sim"
-      // - Tipo = "Descarte"
-      // - OndeDescartadoTipo = "IBCs"
-      if(oleoVal !== "Sim") return;
-      if(tipoAtiv !== "Descarte") return;
-      if(ondeTipo !== "IBCs") return;
-
-      const qtdTexto = e.quantidade || d.quantidade || "";
-      const litrosCalc = quantidadeToLitros(qtdTexto);
-
-      relatoriosAll.push({
-        id: doc.id,
-        numeroPT: d.numeroPT ?? d.numeroPt ?? "",
-        data: d.data || "",
-        diaSemana: d.diaSemana || "",
-        equipamento: d.equipamento || "",
-        placa: d.placa || "",
-        local: d.local || "",
-        tipoServico: d.tipoServico || e.tipoServico || "",
-        quantidade: qtdTexto,
-        litros: litrosCalc,
-        ondeDescartadoTexto: ondeTexto || "IBCs",
-        operador: d.operador || "",
-        ajudante: d.ajudante || ""
+          // Filtros específicos para esta página
+          if(e.oleo === "Sim" && e.tipoAtividade === "Descarte" && e.ondeDescartadoTipo === "IBCs"){
+            const qtdTexto = e.quantidade || d.quantidade || "";
+            relatoriosAll.push({
+              numeroPT: d.numeroPT || d.numeroPt || "---",
+              data: d.data || "",
+              equipamento: d.equipamento || "",
+              local: d.local || "",
+              tipoServico: e.tipoServico || d.tipoServico || "",
+              quantidade: qtdTexto,
+              litros: quantidadeToLitros(qtdTexto),
+              ondeDescartadoTexto: e.ondeDescartadoTexto || "IBC",
+              operador: d.operador || ""
+            });
+          }
+        });
+        
+        renderHeader();
+        filtrar();
+        info.textContent = "Dados atualizados.";
       });
-    });
-
-    renderHeader();
-    relatoriosFiltrados=[...relatoriosAll];
-    renderBody();
-    atualizarResumo();
-
-    // Depois de carregar tudo com sucesso, limpamos o texto abaixo do título
-    subtitleInfo.textContent = "";
-  }catch(err){
-    console.error("Erro ao carregar relatórios:",err);
-    subtitleInfo.textContent="Erro ao carregar dados. Veja o console.";
+  } catch (err) {
+    info.textContent = "Erro na conexão.";
+    console.error(err);
   }
 }
 
-carregarRelatorios();
-</script>
+function filtrar(){
+  const mes = document.getElementById("filtroMes").value;
+  const filtrados = relatoriosAll.filter(r => {
+    if(!mes) return true;
+    return r.data && r.data.split("-")[1] === mes;
+  });
+  renderTable(filtrados);
+  updateStats(filtrados);
+}
 
+document.getElementById("filtroMes").onchange = filtrar;
+
+// Drag Scroll
+const slider = document.getElementById("tableWrapper");
+let isDown = false, startX, scrollLeft;
+slider.onmousedown = (e) => { isDown = true; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; };
+slider.onmouseleave = () => isDown = false;
+slider.onmouseup = () => isDown = false;
+slider.onmousemove = (e) => { if(!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; slider.scrollLeft = scrollLeft - (x - startX); };
+
+carregarDados();
+</script>
 </body>
 </html>
