@@ -388,7 +388,6 @@ body.sidebar-open .sidebar{
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-title-block">
@@ -425,7 +424,6 @@ body.sidebar-open .sidebar{
 
 <div class="topbar-mobile">Excluídos — Relatórios</div>
 
-<!-- MAIN -->
 <div class="main-wrapper">
   <header class="page-header">
     <div>
@@ -473,7 +471,6 @@ body.sidebar-open .sidebar{
   </footer>
 </div>
 
-<!-- MODAL DETALHES -->
 <div id="modal" class="modal">
   <div class="modal-box">
     <div class="modal-header">
@@ -485,22 +482,20 @@ body.sidebar-open .sidebar{
 </div>
 
 <div id="toast" class="toast"></div>
-
-<!-- Firebase (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
+// ATUALIZADO PARA O NOVO PROJETO relatorio-rss3-15896
 const firebaseConfig = {
-  apiKey: "AIzaSyC8loXqt9Vaup9baWt6cFhYU8ikX8BQv5U",
-  authDomain: "relatorio-rss3.firebaseapp.com",
-  projectId: "relatorio-rss3",
-  storageBucket: "relatorio-rss3.firebasestorage.app",
-  messagingSenderId: "540170198292",
-  appId: "1:540170198292:web:6edec9ab51983c22eb7601",
-  measurementId: "G-WYE6VL928H"
+  apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
+  authDomain: "relatorio-rss3-15896.firebaseapp.com",
+  projectId: "relatorio-rss3-15896",
+  storageBucket: "relatorio-rss3-15896.firebasestorage.app",
+  messagingSenderId: "905086909082",
+  appId: "1:905086909082:web:7535afa8dddbd7b691fd23",
+  measurementId: "G-EPGW3FGXX5"
 };
 
-// Evita reinicialização se já houver app inicializado (útil em hot-reload / includes)
 if (!window.firebase.apps || window.firebase.apps.length === 0) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -508,12 +503,7 @@ const db = firebase.firestore();
 </script>
 
 <script>
-// Proteção básica (comente se não quiser)
-if(localStorage.getItem("auth_relatorios")!=="true"){
-  // window.location.href="index.html";
-}
-
-/* Tema */
+/* Tema e UI */
 const themeToggle=document.getElementById("themeToggle");
 if(localStorage.getItem("tema")==="dark"){
   document.body.classList.add("dark");
@@ -526,14 +516,12 @@ themeToggle.onclick=()=>{
   localStorage.setItem("tema",dark?"dark":"light");
 };
 
-/* Sidebar */
 const sidebarHandle=document.getElementById("sidebarHandle");
 sidebarHandle.addEventListener("click",()=>{
   document.body.classList.toggle("sidebar-open");
 });
-</script>
 
-<script>
+/* Lógica de Dados */
 const cardsEl=document.getElementById("cards");
 const emptyMsg=document.getElementById("emptyMsg");
 const infoCount=document.getElementById("infoCount");
@@ -571,7 +559,6 @@ function formatDateBr(d){
   return d;
 }
 
-/* Abrir modal de detalhes (igual admin) */
 function abrirModal(r){
   const pt = r.numeroPT || r.numeroPt || "—";
   modalTitle.textContent=`PT ${pt} — ${formatDateBr(r.data||"")}`;
@@ -590,12 +577,11 @@ function abrirModal(r){
       <div class="modal-field"><span class="label">Emitente Encerramento</span><span class="value">${r.emitenteEncerramento||"—"}</span></div>
       <div class="modal-field"><span class="label">Operador</span><span class="value">${r.operador||"—"}</span></div>
       <div class="modal-field"><span class="label">Ajudante</span><span class="value">${r.ajudante||"—"}</span></div>
-      <div class="modal-field"><span class="label">Tipo Atividade</span><span class="value">${esp.tipoAtividade||r.tipoAtividade||r.tipo||"—"}</span></div>
+      <div class="modal-field"><span class="label">Tipo Atividade</span><span class="value">${esp.tipoAtividade||r.tipoAtividade||"—"}</span></div>
       <div class="modal-field"><span class="label">Óleo</span><span class="value">${esp.oleo||r.oleo||"—"}</span></div>
       <div class="modal-field"><span class="label">Qtd Óleo</span><span class="value">${esp.quantidade||r.quantidade||"—"}</span></div>
       <div class="modal-field"><span class="label">Tipo Serviço</span><span class="value">${r.tipoServico|| (esp.tipoServico||"—")}</span></div>
     </div>
-
     <div class="modal-section-title">Horários</div>
     <div class="modal-grid">
       <div class="modal-field"><span class="label">DDS & Checklist</span><span class="value">${h.ddsChecklist||"—"}</span></div>
@@ -604,30 +590,13 @@ function abrirModal(r){
       <div class="modal-field"><span class="label">Liberação da PT</span><span class="value">${h.liberacaoPT||"—"}</span></div>
       <div class="modal-field"><span class="label">Início Atividade</span><span class="value">${h.inicio||"—"}</span></div>
       <div class="modal-field"><span class="label">Fim Atividade</span><span class="value">${h.fim||"—"}</span></div>
-      <div class="modal-field"><span class="label">Início Intervalo</span><span class="value">${h.inicioIntervalo||"—"}</span></div>
-      <div class="modal-field"><span class="label">Fim Intervalo</span><span class="value">${h.fimIntervalo||"—"}</span></div>
-      <div class="modal-field"><span class="label">Troca de Turno</span><span class="value">${h.trocaTurno||"—"}</span></div>
     </div>
-
-    <div class="modal-section-title">Encerramento da PT</div>
-    <div class="modal-grid">
-      <div class="modal-field">
-        <span class="label">Encerramento</span>
-        <span class="value">${r.encerramentoPt || "—"}</span>
-      </div>
-      <div class="modal-field">
-        <span class="label">Motivo não finalizada</span>
-        <span class="value">${r.motivoNaoFinalizada || "—"}</span>
-      </div>
-    </div>
-
     <div class="modal-section-title">Observações</div>
     <div style="font-size:.8rem;margin-top:4px;">${(r.observacoes||"—").replace(/\n/g,"<br>")}</div>
   `;
   modal.classList.add("open");
 }
 
-/* Render cards */
 function renderCards(){
   cardsEl.innerHTML="";
   if(relatoriosFiltrados.length===0){
@@ -643,19 +612,16 @@ function renderCards(){
     card.className="card";
     const pt=r.numeroPT || r.numeroPt || "—";
     const data=formatDateBr(r.data||"");
-    const placa=r.placa || "—";
-    const local=r.local || "—";
-    const equip=r.equipamento || "—";
-
+    
     card.innerHTML=`
       <div class="card-header-row">
         <span class="card-pt">PT ${pt}</span>
         <span class="card-tag">${data}</span>
       </div>
       <div class="card-main">
-        <div><span class="label">Equipamento:</span> ${equip}</div>
-        <div><span class="label">Placa:</span> ${placa}</div>
-        <div><span class="label">Local:</span> ${local}</div>
+        <div><span class="label">Equipamento:</span> ${r.equipamento||"—"}</div>
+        <div><span class="label">Placa:</span> ${r.placa||"—"}</div>
+        <div><span class="label">Local:</span> ${r.local||"—"}</div>
       </div>
       <div class="card-footer">
         <button class="btn btn-view">Ver detalhes</button>
@@ -667,15 +633,9 @@ function renderCards(){
     card.querySelector(".btn-view").onclick = ()=>abrirModal(r);
     card.querySelector(".btn-restore").onclick=()=>restaurarRelatorio(r);
     card.querySelector(".btn-del").onclick=()=>excluirDefinitivo(r);
-
     cardsEl.appendChild(card);
   });
 }
-
-/* Filtros */
-filtroMes.onchange =
-filtroPlaca.oninput =
-filtroLocal.oninput = aplicarFiltros;
 
 function aplicarFiltros(){
   const mes=filtroMes.value;
@@ -691,61 +651,51 @@ function aplicarFiltros(){
     if(localTxt && !(r.local||"").toLowerCase().includes(localTxt)) return false;
     return true;
   });
-
   renderCards();
 }
 
-/* Restaurar da lixeira para principal */
+filtroMes.onchange = aplicarFiltros;
+filtroPlaca.oninput = aplicarFiltros;
+filtroLocal.oninput = aplicarFiltros;
+
 async function restaurarRelatorio(r){
-  const pt = r.numeroPT || r.numeroPt || "—";
-  if(!confirm(`Restaurar a PT ${pt} para a lista principal?`)) return;
+  if(!confirm(`Restaurar a PT ${r.numeroPT || r.numeroPt}?`)) return;
   try{
     const data=Object.assign({},r);
     delete data.id;
-    // garante numeroPT em string
-    data.numeroPT = String(pt);
-    data.restauradoEm = firebase.firestore.FieldValue.serverTimestamp();
-
     await db.collection("relatoriosCampo").doc(r.id).set(data);
     await db.collection("relatoriosCampoExcluidos").doc(r.id).delete();
     showToast("Relatório restaurado.");
-    await carregarRelatorios();
+    carregarRelatorios();
   }catch(err){
-    console.error(err);
     showToast("Erro ao restaurar.","#dc2626");
   }
 }
 
-/* Excluir definitivamente */
 async function excluirDefinitivo(r){
-  const pt = r.numeroPT || r.numeroPt || "—";
-  if(!confirm(`Excluir definitivamente a PT ${pt}?`)) return;
+  if(!confirm(`Excluir permanentemente a PT ${r.numeroPT || r.numeroPt}?`)) return;
   try{
     await db.collection("relatoriosCampoExcluidos").doc(r.id).delete();
-    showToast("Relatório excluído definitivamente.");
-    await carregarRelatorios();
+    showToast("Excluído definitivamente.");
+    carregarRelatorios();
   }catch(err){
-    console.error(err);
     showToast("Erro ao excluir.","#dc2626");
   }
 }
 
-/* Carregar excluídos */
 async function carregarRelatorios(){
   try{
-    infoCount.textContent="Carregando dados do Firebase...";
+    infoCount.textContent="Sincronizando...";
     const snap=await db.collection("relatoriosCampoExcluidos").orderBy("numeroPT","desc").get();
     relatoriosAll=snap.docs.map(doc=>({id:doc.id,...doc.data()}));
     relatoriosFiltrados=[...relatoriosAll];
     renderCards();
   }catch(err){
-    console.error(err);
-    infoCount.textContent="Erro ao carregar dados.";
+    infoCount.textContent="Erro ao carregar.";
   }
 }
 
 carregarRelatorios();
 </script>
-
 </body>
 </html>
