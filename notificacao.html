@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Notificações — Sistema RSS3</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary:#2563eb;
+  --accent:#1d4ed8;
+  --bg:#f3f6fb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --shadow-soft:0 10px 30px rgba(15,23,42,0.10);
+  --shadow-hard:0 18px 45px rgba(15,23,42,0.20);
+  --sidebar-bg:#ffffff;
+  --sidebar-text:#111827;
+  --sidebar-link:#111827;
+  --danger: #ef4444;
+}
+.dark {
+  --bg:#020617;
+  --card:#020617;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --border:#111827;
+  --shadow-soft:0 10px 30px rgba(0,0,0,0.60);
+  --shadow-hard:0 18px 45px rgba(0,0,0,0.80);
+  --sidebar-bg:#020617;
+  --sidebar-text:#e5e7eb;
+  --sidebar-link:#e5e7eb;
+}
+
+*{ box-sizing:border-box; font-family:"Inter",sans-serif; transition:background-color .25s ease, color .25s ease; }
+
+body{ margin:0; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
+
+/* SIDEBAR PADRÃO */
+.sidebar{
+  width:230px; background:var(--sidebar-bg); color:var(--sidebar-text);
+  display:flex; flex-direction:column; padding:14px 12px; gap:14px;
+  position:fixed; inset-block:0; left:0; z-index:40;
+  box-shadow:var(--shadow-hard); transform:translateX(-100%); transition:transform .25s ease;
+}
+body.sidebar-open .sidebar{ transform:translateX(0); }
+
+.sidebar-header{ display:flex; align-items:center; justify-content:space-between; }
+.sidebar-title{ font-family:"Outfit"; font-weight:800; font-size:1.0rem; }
+.sidebar-sub{ font-size:.72rem; color:var(--muted); }
+
+.sidebar-toggle-theme{
+  width:32px; height:32px; border-radius:50%; border:1px solid rgba(148,163,184,0.5);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  background:transparent; color:var(--sidebar-text); font-size: 1rem;
+}
+
+.sidebar-nav{ display:flex; flex-direction:column; gap:4px; }
+.sidebar-link{
+  display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:10px;
+  text-decoration:none; font-size:.85rem; color:var(--sidebar-link);
+}
+.sidebar-link.active{ background:rgba(37,99,235,0.15); font-weight: 600; }
+.sidebar-link:hover:not(.active) { background:rgba(37,99,235,0.05); }
+
+.sidebar-handle{
+  position:fixed; top:14px; left:10px; z-index:45; width:30px; height:30px;
+  border-radius:999px; border:none; cursor:pointer; background:#2563eb; color:#f9fafb;
+  box-shadow:0 8px 20px rgba(37,99,235,0.6); display:flex; align-items:center; justify-content:center;
+}
+
+/* MAIN CONTENT */
+.main-wrapper{ flex:1; padding:18px 20px; display:flex; flex-direction:column; }
+@media(max-width:900px){ .main-wrapper{ padding-top:56px; } }
+
+.page-header{ margin-bottom:20px; }
+.page-title{ font-family:"Outfit"; font-weight:800; font-size:1.4rem; }
+
+/* ESTILO NOTIFICAÇÕES */
+.notif-list { display: flex; flex-direction: column; gap: 12px; }
+.card-notif {
+  background: var(--card); padding: 16px; border-radius: 14px;
+  border: 1px solid var(--border); border-left: 6px solid var(--primary);
+  box-shadow: var(--shadow-soft); display: flex; align-items: center; gap: 15px;
+  animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.card-notif.urgente { border-left-color: var(--danger); }
+.notif-icon { font-size: 1.5rem; }
+.notif-info b { display: block; font-size: 1.05rem; margin-bottom: 4px; color: var(--primary); }
+.card-notif.urgente b { color: var(--danger); }
+.notif-info p { margin: 0; font-size: 0.9rem; color: var(--text); }
+.notif-info span { font-size: 0.75rem; color: var(--muted); margin-top: 8px; display: block; }
+
+footer{ margin-top:auto; font-size:.75rem; color:var(--muted); text-align:center; padding: 20px; }
+</style>
+</head>
+<body class="sidebar-open">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title-block">
+      <span class="sidebar-title">Relatórios de Campo</span>
+      <span class="sidebar-sub">CMPC • RSS3</span>
+    </div>
+    <button id="themeToggle" class="sidebar-toggle-theme" type="button">🌙</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="admin.html" class="sidebar-link"><span class="icon">📋</span><span>Admin</span></a>
+    <a href="dashboard.html" class="sidebar-link"><span class="icon">📊</span><span>Dashboard</span></a>
+    <a href="planilha.html" class="sidebar-link"><span class="icon">📑</span><span>Planilha</span></a>
+    <a href="oleo-ibcs.html" class="sidebar-link"><span class="icon">🛢️</span><span>Óleo em IBCs</span></a>
+    <a href="notificacoes.html" class="sidebar-link active"><span class="icon">🔔</span><span>Notificações</span></a>
+    <a href="excluidos.html" class="sidebar-link"><span class="icon">🗑️</span><span>Excluídos</span></a>
+  </nav>
+</aside>
+
+<button id="sidebarHandle" class="sidebar-handle" type="button">☰</button>
+
+<div class="main-wrapper">
+  <header class="page-header">
+    <div class="page-title">Centro de Notificações</div>
+    <div class="sidebar-sub" id="statusVerificacao">Sincronizando com Firebase...</div>
+  </header>
+
+  <div class="notif-list" id="listaNotificacoes">
+    </div>
+
+  <footer>© 2025 | Sistema RSS3 - Gestão de Resíduos</footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+// CONFIGURAÇÃO DO SEU PROJETO
+const firebaseConfig = {
+  apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
+  authDomain: "relatorio-rss3-15896.firebaseapp.com",
+  projectId: "relatorio-rss3-15896",
+  storageBucket: "relatorio-rss3-15896.firebasestorage.app",
+  messagingSenderId: "905086909082",
+  appId: "1:905086909082:web:7535afa8dddbd7b691fd23"
+};
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+const db = firebase.firestore();
+
+/* LÓGICA DE TEMA E SIDEBAR */
+const themeToggle = document.getElementById("themeToggle");
+const sidebarHandle = document.getElementById("sidebarHandle");
+
+if(localStorage.getItem("tema") === "dark"){
+  document.body.classList.add("dark");
+  themeToggle.textContent = "☀️";
+}
+
+themeToggle.onclick = () => {
+  document.body.classList.toggle("dark");
+  const isDark = document.body.classList.contains("dark");
+  themeToggle.textContent = isDark ? "☀️" : "🌙";
+  localStorage.setItem("tema", isDark ? "dark" : "light");
+};
+
+sidebarHandle.onclick = () => document.body.classList.toggle("sidebar-open");
+
+/* LÓGICA DE MONITORAMENTO */
+
+const TURNOS_CONFIG = [
+    { nome: "Turno 1", inicio: "07:30", fim: "14:40", icone: "☀️" },
+    { nome: "Turno 2", inicio: "14:40", fim: "23:40", icone: "🌆" },
+    { nome: "Turno 3", inicio: "23:40", fim: "07:30", icone: "🌙" }
+];
+
+const OPERADORES_ADM = ["Bruno Ramos", "Carlos Alexandre"];
+
+async function verificarPendenciasReal() {
+    const lista = document.getElementById("listaNotificacoes");
+    const status = document.getElementById("statusVerificacao");
+    lista.innerHTML = "";
+    
+    // Define a data de ontem para verificação
+    const hoje = new Date();
+    const ontem = new Date();
+    ontem.setDate(hoje.getDate() - 1);
+    const dataBusca = ontem.toISOString().split('T')[0];
+    const dataFormatada = dataBusca.split('-').reverse().join('/');
+
+    try {
+        const querySnapshot = await db.collection("relatoriosCampo")
+            .where("data", "==", dataBusca)
+            .get();
+
+        const relatorios = querySnapshot.docs.map(doc => doc.data());
+
+        // 1. Verificação ADM (Individual) - Somente Seg a Sex
+        const diaSemana = ontem.getDay(); 
+        if (diaSemana >= 1 && diaSemana <= 5) {
+            OPERADORES_ADM.forEach(adm => {
+                const fezRelatorio = relatorios.some(r => r.operador === adm);
+                if (!fezRelatorio) {
+                    gerarCard(`Relatório Individual Faltante: ${adm}`, `Nenhum registro encontrado no dia ${dataFormatada} (Turno ADM).`, "👤");
+                }
+            });
+        }
+
+        // 2. Verificação Operacional (Por Turno)
+        TURNOS_CONFIG.forEach(turno => {
+            const turnoCoberto = relatorios.some(r => {
+                const hora = r.horarios?.inicio || r.horaInicio || "00:00";
+                return validarHorarioTurno(hora, turno.inicio, turno.fim);
+            });
+
+            if (!turnoCoberto) {
+                gerarCard(`Falta de Cobertura: ${turno.nome}`, `Nenhum relatório foi enviado no horário do ${turno.nome} (${turno.inicio} - ${turno.fim}) em ${dataFormatada}.`, turno.icone);
+            }
+        });
+
+        status.textContent = `Verificação concluída para ${dataFormatada}`;
+
+    } catch (error) {
+        console.error(error);
+        status.textContent = "Erro ao carregar dados do Firebase.";
+    }
+}
+
+function validarHorarioTurno(hora, inicio, fim) {
+    if (inicio < fim) {
+        return hora >= inicio && hora < fim;
+    } else {
+        // Lógica para Turno 3 que atravessa a meia-noite
+        return hora >= inicio || hora < fim;
+    }
+}
+
+function gerarCard(titulo, msg, icone) {
+    const lista = document.getElementById("listaNotificacoes");
+    const card = document.createElement("div");
+    card.className = "card-notif urgente";
+    card.innerHTML = `
+        <div class="notif-icon">${icone}</div>
+        <div class="notif-info">
+            <b>${titulo}</b>
+            <p>${msg}</p>
+            <span>Gerado automaticamente pelo Sistema RSS3</span>
+        </div>
+    `;
+    lista.appendChild(card);
+}
+
+// Inicia a verificação ao carregar a página
+verificarPendenciasReal();
+
+</script>
+</body>
+</html>
