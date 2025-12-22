@@ -475,24 +475,24 @@ footer{
     © 2025 | Relatórios de Campo — Planilha
   </footer>
 </div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyC8loXqt9Vaup9baWt6cFhYU8ikX8BQv5U",
-  authDomain: "relatorio-rss3.firebaseapp.com",
-  projectId: "relatorio-rss3",
-  storageBucket: "relatorio-rss3.firebasestorage.app",
-  messagingSenderId: "540170198292",
-  appId: "1:540170198292:web:6edec9ab51983c22eb7601",
-  measurementId: "G-WYE6VL928H"
+  apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
+  authDomain: "relatorio-rss3-15896.firebaseapp.com",
+  projectId: "relatorio-rss3-15896",
+  storageBucket: "relatorio-rss3-15896.firebasestorage.app",
+  messagingSenderId: "905086909082",
+  appId: "1:905086909082:web:7535afa8dddbd7b691fd23",
+  measurementId: "G-EPGW3FGXX5"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 </script>
-
 <script>
-// Proteção básica (comente o redirect se não quiser)
+// Proteção básica
 if(localStorage.getItem("auth_relatorios")!=="true"){
   // window.location.href="index.html";
 }
@@ -574,7 +574,6 @@ function formatMinutesAsHhMm(min){
 function parseDurationInputToMinutes(str){
   if(!str) return null;
   str=str.trim();
-  // se vier no formato hh:mm
   if(str.includes(":")){
     const parts=str.split(":");
     if(parts.length<2) return null;
@@ -583,7 +582,6 @@ function parseDurationInputToMinutes(str){
     if(isNaN(h)||isNaN(m)||h<0||m<0||m>=60) return null;
     return h*60+m;
   }
-  // se o usuário digitar só minutos "310"
   const n=parseInt(str,10);
   if(isNaN(n) || n<0) return null;
   return n;
@@ -604,7 +602,6 @@ const columns=[
   {key:"operador",            label:"Operador",              editable:true},
   {key:"ajudante",            label:"Ajudante",              editable:true},
   {key:"tipoServico",         label:"Tipo Serviço",          editable:true},
-
   {key:"h_ddsChecklist",      label:"DDS/Checklist",         editable:true},
   {key:"h_disposicao",        label:"Disp. Coordenação",     editable:true},
   {key:"h_chegada",           label:"Chegada Local",         editable:true},
@@ -614,18 +611,13 @@ const columns=[
   {key:"h_inicioIntervalo",   label:"Início Intervalo",      editable:true},
   {key:"h_fimIntervalo",      label:"Fim Intervalo",         editable:true},
   {key:"h_trocaTurno",        label:"Troca Turno",           editable:true},
-
   {key:"tipoAtividade",       label:"Tipo Atividade",        editable:true},
   {key:"oleo",                label:"Óleo",                  editable:true},
   {key:"quantidade",          label:"Qtd Óleo",              editable:true},
-
   {key:"encerramentoPt",      label:"Encerramento PT",       editable:true},
   {key:"motivoNaoFinalizada", label:"Motivo Não Finalizada", editable:true},
-
   {key:"duracaoMinutos",      label:"Duração (hh:mm)",       editable:true},
-
   {key:"observacoes",         label:"Observações",           editable:true},
-
   {key:"criadoEm",            label:"Criado em",             editable:false},
   {key:"deviceId",            label:"Device ID",             editable:false, advanced:true},
   {key:"operadorIdFixo",      label:"Operador ID",           editable:false, advanced:true}
@@ -635,7 +627,6 @@ let relatoriosRaw=[];
 let relatoriosFiltrados=[];
 let activeFilters={};
 
-/* ===== Painel único de filtro por coluna ===== */
 const colFilterPanel=document.getElementById("colFilterPanel");
 const colFilterTitle=document.getElementById("colFilterTitle");
 const colFilterList=document.getElementById("colFilterList");
@@ -648,16 +639,13 @@ function openFilterPanelFor(colKey){
   currentFilterCol=colKey;
   const colConf=columns.find(c=>c.key===colKey);
   colFilterTitle.textContent=`Filtrar: ${colConf ? colConf.label : colKey}`;
-
   const valuesSet=new Set();
   relatoriosRaw.forEach(r=>{
     const v = r[colKey] ?? "";
     valuesSet.add(String(v || "").trim());
   });
   const allValues=Array.from(valuesSet).sort((a,b)=>a.localeCompare(b));
-
   const selectedSet = activeFilters[colKey] || new Set();
-
   colFilterList.innerHTML="";
   if(allValues.length===0){
     colFilterList.innerHTML='<div style="font-size:.78rem;color:var(--muted);">Sem valores.</div>';
@@ -673,7 +661,6 @@ function openFilterPanelFor(colKey){
       colFilterList.appendChild(label);
     });
   }
-
   colFilterPanel.classList.add("open");
 }
 
@@ -681,11 +668,7 @@ applyColFilter.addEventListener("click",()=>{
   if(!currentFilterCol){colFilterPanel.classList.remove("open");return;}
   const checks=colFilterList.querySelectorAll('input[type="checkbox"]');
   const set=new Set();
-  checks.forEach(ch=>{
-    if(ch.checked){
-      set.add(ch.dataset.value);
-    }
-  });
+  checks.forEach(ch=>{ if(ch.checked) set.add(ch.dataset.value); });
   if(set.size===0 || set.size===checks.length){
     delete activeFilters[currentFilterCol];
   }else{
@@ -696,9 +679,7 @@ applyColFilter.addEventListener("click",()=>{
 });
 
 clearColFilter.addEventListener("click",()=>{
-  if(currentFilterCol){
-    delete activeFilters[currentFilterCol];
-  }
+  if(currentFilterCol) delete activeFilters[currentFilterCol];
   colFilterPanel.classList.remove("open");
   aplicarFiltrosEAtualizar();
 });
@@ -707,7 +688,6 @@ window.addEventListener("click",(e)=>{
   if(!colFilterPanel.contains(e.target)) colFilterPanel.classList.remove("open");
 });
 
-/* ===== Cabeçalho ===== */
 function renderHeader(){
   sheetHeaderRow.innerHTML="";
   columns.forEach(col=>{
@@ -715,12 +695,7 @@ function renderHeader(){
     th.className="filterable";
     th.dataset.colkey=col.key;
     if(col.advanced) th.classList.add("advanced-col");
-    th.innerHTML=`
-      <button type="button" class="th-inner-btn">
-        <span>${col.label}</span>
-        <span class="chevron">▾</span>
-      </button>
-    `;
+    th.innerHTML=`<button type="button" class="th-inner-btn"><span>${col.label}</span><span class="chevron">▾</span></button>`;
     th.querySelector("button").addEventListener("click",(e)=>{
       e.stopPropagation();
       openFilterPanelFor(col.key);
@@ -729,7 +704,6 @@ function renderHeader(){
   });
 }
 
-/* ===== Corpo ===== */
 function renderBody(){
   sheetBody.innerHTML="";
   relatoriosFiltrados.forEach(r=>{
@@ -739,25 +713,20 @@ function renderBody(){
       const td=document.createElement("td");
       td.dataset.col=col.key;
       if(col.advanced) td.classList.add("advanced-col");
-
       let val = r[col.key];
       if(col.key==="duracaoMinutos"){
-        // mostra sempre hh:mm
         const n=parseInt(val,10);
         val = isNaN(n) ? "" : formatMinutesAsHhMm(n);
       }
       if(val==null) val="";
       td.textContent=String(val);
-      if(col.editable){
-        td.contentEditable="true";
-      }
+      if(col.editable) td.contentEditable="true";
       tr.appendChild(td);
     });
     sheetBody.appendChild(tr);
   });
 }
 
-/* ===== Filtros ===== */
 function aplicarFiltrosEAtualizar(){
   relatoriosFiltrados = relatoriosRaw.filter(r=>{
     for(const [colKey,set] of Object.entries(activeFilters)){
@@ -768,12 +737,10 @@ function aplicarFiltrosEAtualizar(){
     }
     return true;
   });
-
   subtitleInfo.textContent = `${relatoriosFiltrados.length} relatório(s) exibido(s)`;
   renderBody();
 }
 
-/* ===== Update payload ===== */
 function buildUpdatePayload(colKey,newValue){
   switch(colKey){
     case "h_ddsChecklist":    return {"horarios.ddsChecklist": newValue};
@@ -785,70 +752,39 @@ function buildUpdatePayload(colKey,newValue){
     case "h_fimIntervalo":    return {"horarios.fimIntervalo": newValue};
     case "h_fim":             return {"horarios.fim":          newValue};
     case "h_trocaTurno":      return {"horarios.trocaTurno":   newValue};
-
-    case "tipoAtividade":
-      return {
-        "tipoAtividade": newValue,
-        "especificacoes.tipoAtividade": newValue
-      };
-    case "oleo":
-      return {
-        "oleo": newValue,
-        "especificacoes.oleo": newValue
-      };
-    case "quantidade":
-      return {
-        "quantidade": newValue,
-        "especificacoes.quantidade": newValue
-      };
-    case "tipoServico":
-      return {
-        "tipoServico": newValue,
-        "especificacoes.tipoServico": newValue
-      };
-
-    case "duracaoMinutos":
-      return {"duracaoMinutos": newValue};
-
-    default:
-      return {[colKey]: newValue};
+    case "tipoAtividade":     return {"tipoAtividade": newValue, "especificacoes.tipoAtividade": newValue};
+    case "oleo":              return {"oleo": newValue, "especificacoes.oleo": newValue};
+    case "quantidade":        return {"quantidade": newValue, "especificacoes.quantidade": newValue};
+    case "tipoServico":       return {"tipoServico": newValue, "especificacoes.tipoServico": newValue};
+    case "duracaoMinutos":    return {"duracaoMinutos": newValue};
+    default:                  return {[colKey]: newValue};
   }
 }
 
-/* ===== Edição de células ===== */
 sheetBody.addEventListener("blur",async (e)=>{
   const td=e.target;
   if(td.tagName!=="TD" || !td.dataset.col) return;
   const colKey=td.dataset.col;
   const colConf=columns.find(c=>c.key===colKey);
   if(!colConf || !colConf.editable) return;
-
   const tr=td.closest("tr");
   const id=tr.dataset.id;
   let newValue=td.textContent.trim();
-
-  // tratamento especial para duração (HH:MM -> minutos)
   if(colKey==="duracaoMinutos"){
     const mins=parseDurationInputToMinutes(newValue);
     if(mins==null){
-      // inválido: volta para o valor antigo que está em relatoriosRaw
       const objOld = relatoriosRaw.find(r=>r.id===id);
-      if(objOld){
-        td.textContent = formatMinutesAsHhMm(objOld.duracaoMinutos);
-      }
+      if(objOld) td.textContent = formatMinutesAsHhMm(objOld.duracaoMinutos);
       return;
     }
     newValue = mins;
     td.textContent = formatMinutesAsHhMm(mins);
   }
-
   try{
     const updatePayload = buildUpdatePayload(colKey,newValue);
     await db.collection("relatoriosCampo").doc(id).update(updatePayload);
-
     const obj=relatoriosRaw.find(r=>r.id===id);
     if(obj) obj[colKey]=newValue;
-
     aplicarFiltrosEAtualizar();
   }catch(err){
     console.error("Erro ao atualizar campo:",err);
@@ -856,82 +792,53 @@ sheetBody.addEventListener("blur",async (e)=>{
   }
 },true);
 
-/* ===== Botão colunas avançadas ===== */
 btnToggleAdvanced.addEventListener("click",()=>{
   advancedVisible=!advancedVisible;
   document.body.classList.toggle("show-advanced",advancedVisible);
-  labelAdvanced.textContent = advancedVisible
-    ? "Ocultar colunas avançadas"
-    : "Mostrar colunas avançadas";
+  labelAdvanced.textContent = advancedVisible ? "Ocultar colunas avançadas" : "Mostrar colunas avançadas";
 });
 
-/* ===== Exportar CSV (linhas filtradas) ===== */
 btnExportCsv.addEventListener("click",()=>{
-  if(!relatoriosFiltrados.length){
-    alert("Nenhum relatório para exportar.");
-    return;
-  }
+  if(!relatoriosFiltrados.length){ alert("Nenhum relatório para exportar."); return; }
   const sep=";";
   const header=columns.map(c=>c.label).join(sep);
   const lines=[header];
-
   relatoriosFiltrados.forEach(r=>{
     const row=columns.map(col=>{
       let v=r[col.key];
-      if(col.key==="duracaoMinutos"){
-        const n=parseInt(v,10);
-        v=isNaN(n)?"":formatMinutesAsHhMm(n);
-      }
+      if(col.key==="duracaoMinutos"){ const n=parseInt(v,10); v=isNaN(n)?"":formatMinutesAsHhMm(n); }
       if(v==null) v="";
-      let s=String(v);
-      s=s.replace(/"/g,'""');
-      if(s.includes(sep) || s.includes('"') || s.includes('\n')){
-        return `"${s}"`;
-      }
-      return s;
+      let s=String(v).replace(/"/g,'""');
+      return (s.includes(sep) || s.includes('"') || s.includes('\n')) ? `"${s}"` : s;
     }).join(sep);
     lines.push(row);
   });
-
   const csv=lines.join("\r\n");
   const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
   const now=new Date();
-  const yyyy=now.getFullYear();
-  const mm=String(now.getMonth()+1).padStart(2,"0");
-  const dd=String(now.getDate()).padStart(2,"0");
   a.href=url;
-  a.download=`relatorios-planilha-${yyyy}${mm}${dd}.csv`;
+  a.download=`relatorios-planilha-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 });
 
-/* ===== Carregar relatórios REALTIME ===== */
 function carregarRelatoriosRealtime(){
   subtitleInfo.textContent="Carregando dados do Firebase...";
-  
-  // O onSnapshot substitui o .get() para atualizar em tempo real
   db.collection("relatoriosCampo").orderBy("numeroPT","desc").onSnapshot((snap) => {
     relatoriosRaw=[];
     snap.docs.forEach(doc=>{
       const d = doc.data();
       const h = d.horarios || {};
       const e = d.especificacoes || {};
-
       let criadoEmStr="";
       if(d.criadoEm && typeof d.criadoEm.toDate==="function"){
         const dt=d.criadoEm.toDate();
-        const dia=String(dt.getDate()).padStart(2,"0");
-        const mes=String(dt.getMonth()+1).padStart(2,"0");
-        const ano=dt.getFullYear();
-        const hh=String(dt.getHours()).padStart(2,"0");
-        const mm=String(dt.getMinutes()).padStart(2,"0");
-        criadoEmStr=`${dia}/${mes}/${ano} ${hh}:${mm}`;
+        criadoEmStr=`${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()} ${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
       }
-
       relatoriosRaw.push({
         id: doc.id,
         numeroPT: d.numeroPT ?? d.numeroPt ?? "",
@@ -968,7 +875,6 @@ function carregarRelatoriosRealtime(){
         operadorIdFixo: d.operadorIdFixo || ""
       });
     });
-
     if(sheetHeaderRow.innerHTML==="") renderHeader();
     aplicarFiltrosEAtualizar();
   }, (err) => {
@@ -976,10 +882,7 @@ function carregarRelatoriosRealtime(){
     subtitleInfo.textContent="Erro ao sincronizar.";
   });
 }
-
-// Inicia a escuta em tempo real
 carregarRelatoriosRealtime();
 </script>
-
 </body>
 </html>
