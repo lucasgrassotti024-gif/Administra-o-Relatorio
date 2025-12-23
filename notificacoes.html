@@ -22,13 +22,14 @@
   --sidebar-text:#111827;
   --sidebar-link:#111827;
   --danger: #ef4444;
+  --success: #10b981;
 }
 .dark {
   --bg:#020617;
-  --card:#020617;
+  --card:#0b1120;
   --text:#e5e7eb;
   --muted:#9ca3af;
-  --border:#111827;
+  --border:#1e293b;
   --shadow-soft:0 10px 30px rgba(0,0,0,0.60);
   --shadow-hard:0 18px 45px rgba(0,0,0,0.80);
   --sidebar-bg:#020617;
@@ -40,7 +41,7 @@
 
 body{ margin:0; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
 
-/* SIDEBAR PADRÃO */
+/* SIDEBAR */
 .sidebar{
   width:230px; background:var(--sidebar-bg); color:var(--sidebar-text);
   display:flex; flex-direction:column; padding:14px 12px; gap:14px;
@@ -74,27 +75,51 @@ body.sidebar-open .sidebar{ transform:translateX(0); }
 }
 
 /* MAIN CONTENT */
-.main-wrapper{ flex:1; padding:18px 20px; display:flex; flex-direction:column; }
+.main-wrapper{ flex:1; padding:18px 20px; display:flex; flex-direction:column; max-width: 1200px; margin: 0 auto; }
 @media(max-width:900px){ .main-wrapper{ padding-top:56px; } }
 
-.page-header{ margin-bottom:20px; }
+.page-header{ margin-bottom:25px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px; }
 .page-title{ font-family:"Outfit"; font-weight:800; font-size:1.4rem; }
 
-/* ESTILO NOTIFICAÇÕES */
+/* CONTROLES E STATS */
+.controls { display: flex; gap: 10px; align-items: center; }
+input[type="date"] { 
+    padding: 8px; border-radius: 8px; border: 1px solid var(--border); 
+    background: var(--card); color: var(--text); font-size: 0.9rem;
+}
+
+.stats-grid { 
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+    gap: 15px; margin-bottom: 25px; 
+}
+.stat-card { 
+    background: var(--card); padding: 15px; border-radius: 12px; 
+    border: 1px solid var(--border); text-align: center;
+}
+.stat-card span { display: block; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; }
+.stat-card b { font-size: 1.4rem; color: var(--primary); }
+
+/* NOTIFICAÇÕES */
 .notif-list { display: flex; flex-direction: column; gap: 12px; }
 .card-notif {
   background: var(--card); padding: 16px; border-radius: 14px;
   border: 1px solid var(--border); border-left: 6px solid var(--primary);
   box-shadow: var(--shadow-soft); display: flex; align-items: center; gap: 15px;
-  animation: slideIn 0.3s ease-out;
+  position: relative; animation: slideIn 0.3s ease-out;
 }
 @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 .card-notif.urgente { border-left-color: var(--danger); }
+.btn-excluir {
+  position: absolute; top: 10px; right: 10px; background: transparent;
+  border: none; color: var(--muted); cursor: pointer; font-size: 1.2rem;
+}
+.btn-excluir:hover { color: var(--danger); }
+
 .notif-icon { font-size: 1.5rem; }
 .notif-info b { display: block; font-size: 1.05rem; margin-bottom: 4px; color: var(--primary); }
 .card-notif.urgente b { color: var(--danger); }
-.notif-info p { margin: 0; font-size: 0.9rem; color: var(--text); }
+.notif-info p { margin: 0; font-size: 0.9rem; color: var(--text); line-height: 1.4; }
 .notif-info span { font-size: 0.75rem; color: var(--muted); margin-top: 8px; display: block; }
 
 footer{ margin-top:auto; font-size:.75rem; color:var(--muted); text-align:center; padding: 20px; }
@@ -125,12 +150,23 @@ footer{ margin-top:auto; font-size:.75rem; color:var(--muted); text-align:center
 
 <div class="main-wrapper">
   <header class="page-header">
-    <div class="page-title">Centro de Notificações</div>
-    <div class="sidebar-sub" id="statusVerificacao">Sincronizando com Firebase...</div>
+    <div>
+        <div class="page-title">Centro de Notificações</div>
+        <div class="sidebar-sub" id="statusVerificacao">Sincronizando...</div>
+    </div>
+    <div class="controls">
+        <input type="date" id="dataFiltro">
+        <button onclick="verificarPendenciasReal()" style="cursor:pointer; background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:8px; font-size:0.8rem;">🔄 Atualizar</button>
+    </div>
   </header>
 
-  <div class="notif-list" id="listaNotificacoes">
-    </div>
+  <div class="stats-grid">
+    <div class="stat-card"><span>Relatórios Enviados</span><b id="statEnviados">0</b></div>
+    <div class="stat-card"><span>Pendências</span><b id="statPendencias" style="color:var(--danger)">0</b></div>
+    <div class="stat-card"><span>Data Analisada</span><b id="statData" style="font-size:1rem; color:var(--text)">--/--</b></div>
+  </div>
+
+  <div class="notif-list" id="listaNotificacoes"></div>
 
   <footer>© 2025 | Sistema RSS3 - Gestão de Resíduos</footer>
 </div>
@@ -139,7 +175,6 @@ footer{ margin-top:auto; font-size:.75rem; color:var(--muted); text-align:center
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
-// CONFIGURAÇÃO DO SEU PROJETO
 const firebaseConfig = {
   apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
   authDomain: "relatorio-rss3-15896.firebaseapp.com",
@@ -151,45 +186,43 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-/* LÓGICA DE TEMA E SIDEBAR */
+/* TEMA E SIDEBAR */
 const themeToggle = document.getElementById("themeToggle");
 const sidebarHandle = document.getElementById("sidebarHandle");
-
-if(localStorage.getItem("tema") === "dark"){
-  document.body.classList.add("dark");
-  themeToggle.textContent = "☀️";
-}
-
+if(localStorage.getItem("tema") === "dark"){ document.body.classList.add("dark"); themeToggle.textContent = "☀️"; }
 themeToggle.onclick = () => {
   document.body.classList.toggle("dark");
   const isDark = document.body.classList.contains("dark");
   themeToggle.textContent = isDark ? "☀️" : "🌙";
   localStorage.setItem("tema", isDark ? "dark" : "light");
 };
-
 sidebarHandle.onclick = () => document.body.classList.toggle("sidebar-open");
 
-/* LÓGICA DE MONITORAMENTO */
-
+/* MONITORAMENTO */
 const TURNOS_CONFIG = [
-    { nome: "Turno 1", inicio: "07:30", fim: "14:40", icone: "☀️" },
-    { nome: "Turno 2", inicio: "14:40", fim: "23:40", icone: "🌆" },
-    { nome: "Turno 3", inicio: "23:40", fim: "07:30", icone: "🌙" }
+    { id: "t1", nome: "Turno 1", inicio: "07:30", fim: "14:40", icone: "☀️" },
+    { id: "t2", nome: "Turno 2", inicio: "14:40", fim: "23:40", icone: "🌆" },
+    { id: "t3", nome: "Turno 3", inicio: "23:40", fim: "07:30", icone: "🌙" }
 ];
-
 const OPERADORES_ADM = ["Bruno Ramos", "Carlos Alexandre"];
+
+// Define data padrão como ontem
+const inputData = document.getElementById("dataFiltro");
+const ontem = new Date();
+ontem.setDate(ontem.getDate() - 1);
+inputData.value = ontem.toISOString().split('T')[0];
 
 async function verificarPendenciasReal() {
     const lista = document.getElementById("listaNotificacoes");
     const status = document.getElementById("statusVerificacao");
-    lista.innerHTML = "";
-    
-    // Define a data de ontem para verificação
-    const hoje = new Date();
-    const ontem = new Date();
-    ontem.setDate(hoje.getDate() - 1);
-    const dataBusca = ontem.toISOString().split('T')[0];
+    const dataBusca = inputData.value;
     const dataFormatada = dataBusca.split('-').reverse().join('/');
+    
+    // Recupera notificações ignoradas do LocalStorage
+    const ignoradas = JSON.parse(localStorage.getItem('notif_ignoradas') || "[]");
+
+    lista.innerHTML = "<p style='text-align:center;'>Buscando dados...</p>";
+    document.getElementById("statData").textContent = dataFormatada;
 
     try {
         const querySnapshot = await db.collection("relatoriosCampo")
@@ -197,65 +230,91 @@ async function verificarPendenciasReal() {
             .get();
 
         const relatorios = querySnapshot.docs.map(doc => doc.data());
+        lista.innerHTML = "";
+        let pendenciasCount = 0;
 
-        // 1. Verificação ADM (Individual) - Somente Seg a Sex
-        const diaSemana = ontem.getDay(); 
+        // 1. Verificação ADM
+        const dataObj = new Date(dataBusca + "T12:00:00");
+        const diaSemana = dataObj.getDay(); 
         if (diaSemana >= 1 && diaSemana <= 5) {
             OPERADORES_ADM.forEach(adm => {
-                const fezRelatorio = relatorios.some(r => r.operador === adm);
-                if (!fezRelatorio) {
-                    gerarCard(`Relatório Individual Faltante: ${adm}`, `Nenhum registro encontrado no dia ${dataFormatada} (Turno ADM).`, "👤");
+                const idNotif = `adm-${adm}-${dataBusca}`;
+                if (ignoradas.includes(idNotif)) return;
+
+                if (!relatorios.some(r => r.operador === adm)) {
+                    gerarCard(idNotif, `ADM: ${adm}`, `Relatório individual não enviado.`, "👤", "urgente");
+                    pendenciasCount++;
                 }
             });
         }
 
-        // 2. Verificação Operacional (Por Turno)
+        // 2. Verificação de Turnos
         TURNOS_CONFIG.forEach(turno => {
-            const turnoCoberto = relatorios.some(r => {
-                const hora = r.horarios?.inicio || r.horaInicio || "00:00";
-                return validarHorarioTurno(hora, turno.inicio, turno.fim);
+            const idNotif = `turno-${turno.id}-${dataBusca}`;
+            if (ignoradas.includes(idNotif)) return;
+
+            const coberto = relatorios.some(r => {
+                const h = r.horario || r.horaInicio || r.horarios?.inicio || "00:00";
+                return validarHorarioTurno(h, turno.inicio, turno.fim);
             });
 
-            if (!turnoCoberto) {
-                gerarCard(`Falta de Cobertura: ${turno.nome}`, `Nenhum relatório foi enviado no horário do ${turno.nome} (${turno.inicio} - ${turno.fim}) em ${dataFormatada}.`, turno.icone);
+            if (!coberto) {
+                gerarCard(idNotif, `Cobertura: ${turno.nome}`, `Sem registros entre ${turno.inicio} e ${turno.fim}.`, turno.icone, "urgente");
+                pendenciasCount++;
             }
         });
 
-        status.textContent = `Verificação concluída para ${dataFormatada}`;
+        // Atualiza Stats
+        document.getElementById("statEnviados").textContent = relatorios.length;
+        document.getElementById("statPendencias").textContent = pendenciasCount;
+        status.textContent = "Sincronizado";
 
-    } catch (error) {
-        console.error(error);
-        status.textContent = "Erro ao carregar dados do Firebase.";
+        if (pendenciasCount === 0) {
+            lista.innerHTML = `<div style="text-align:center; padding:40px; color:var(--muted);">✅ Tudo em dia para este dia!</div>`;
+        }
+
+    } catch (e) {
+        status.textContent = "Erro de conexão";
+        console.error(e);
     }
 }
 
-function validarHorarioTurno(hora, inicio, fim) {
-    if (inicio < fim) {
-        return hora >= inicio && hora < fim;
-    } else {
-        // Lógica para Turno 3 que atravessa a meia-noite
-        return hora >= inicio || hora < fim;
-    }
+function validarHorarioTurno(h, inicio, fim) {
+    const hora = h.substring(0,5);
+    return inicio < fim ? (hora >= inicio && hora < fim) : (hora >= inicio || hora < fim);
 }
 
-function gerarCard(titulo, msg, icone) {
-    const lista = document.getElementById("listaNotificacoes");
+function gerarCard(id, titulo, msg, icone, classe) {
     const card = document.createElement("div");
-    card.className = "card-notif urgente";
+    card.className = `card-notif ${classe}`;
     card.innerHTML = `
+        <button class="btn-excluir" onclick="ignorarNotificacao('${id}', this)">&times;</button>
         <div class="notif-icon">${icone}</div>
         <div class="notif-info">
             <b>${titulo}</b>
             <p>${msg}</p>
-            <span>Gerado automaticamente pelo Sistema RSS3</span>
+            <span>Verificação Automática RSS3</span>
         </div>
     `;
-    lista.appendChild(card);
+    document.getElementById("listaNotificacoes").appendChild(card);
 }
 
-// Inicia a verificação ao carregar a página
-verificarPendenciasReal();
+function ignorarNotificacao(id, btn) {
+    const ignoradas = JSON.parse(localStorage.getItem('notif_ignoradas') || "[]");
+    ignoradas.push(id);
+    localStorage.setItem('notif_ignoradas', JSON.stringify(ignoradas));
+    
+    const card = btn.closest('.card-notif');
+    card.style.opacity = '0';
+    setTimeout(() => { 
+        card.remove();
+        const atual = parseInt(document.getElementById("statPendencias").textContent);
+        document.getElementById("statPendencias").textContent = Math.max(0, atual - 1);
+    }, 300);
+}
 
+inputData.onchange = verificarPendenciasReal;
+verificarPendenciasReal();
 </script>
 </body>
 </html>
