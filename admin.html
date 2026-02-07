@@ -607,8 +607,48 @@ function abrirModal(r){
       <div class="modal-field"><span class="label">Troca de Turno</span><span class="value">${h.trocaTurno||"—"}</span></div>
     </div>
 
-    <div class="modal-section-title">Observações</div>
-    <div style="font-size:.8rem;margin-top:6px;">${(r.observacoes||"—").replace(/\n/g,"<br>")}</div>
+   <div class="modal-section-title">Observações</div>
+<div style="font-size:.8rem;margin-top:6px;">
+  ${(r.observacoes||"—").replace(/\n/g,"<br>")}
+</div>
+
+<div class="modal-section-title">Fotos</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+  ${
+    Array.isArray(r.fotos) && r.fotos.length
+      ? r.fotos.map(src => `
+          <img 
+            src="${src}" 
+            style="
+              width:120px;
+              height:80px;
+              object-fit:cover;
+              border-radius:8px;
+              cursor:zoom-in;
+              box-shadow:0 4px 14px rgba(0,0,0,0.25);
+            "
+            onclick="
+              const ov=document.createElement('div');
+              ov.style.position='fixed';
+              ov.style.inset='0';
+              ov.style.background='rgba(0,0,0,0.85)';
+              ov.style.display='flex';
+              ov.style.alignItems='center';
+              ov.style.justifyContent='center';
+              ov.style.zIndex='9999';
+              ov.onclick=()=>ov.remove();
+              const img=document.createElement('img');
+              img.src=this.src;
+              img.style.maxWidth='92%';
+              img.style.maxHeight='92%';
+              ov.appendChild(img);
+              document.body.appendChild(ov);
+            "
+          >
+        `).join("")
+      : "<span style='font-size:.75rem;color:var(--muted)'>Nenhuma foto anexada.</span>"
+  }
+</div>
   `;
   modal.classList.add("open");
 }
