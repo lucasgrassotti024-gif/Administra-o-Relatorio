@@ -514,10 +514,20 @@ let chartArea=null, chartCaminhao=null, chartTempoCaminhao=null;
 
 /* Helpers de Tempo */
 function parseTimeToMinutes(str){
-  if(!str) return null;
-  const parts = String(str).split(":");
-  if(parts.length < 2) return null;
-  return parseInt(parts[0],10)*60 + parseInt(parts[1],10);
+  if(!str) return 0;
+
+  str = String(str).trim();
+
+  // Se for HH:MM
+  if(str.includes(":")){
+    const parts = str.split(":");
+    if(parts.length < 2) return 0;
+    return parseInt(parts[0],10)*60 + parseInt(parts[1],10);
+  }
+
+  // Se for número direto (ex: 30)
+  const n = parseInt(str,10);
+  return isNaN(n) ? 0 : n;
 }
 
 function diffMinutes(a, b){
@@ -573,19 +583,25 @@ function atualizarDashboard(){
   let tTrabalho=0, tDDS=0, tEspera=0;
   const mapArea={}, mapCamCount={}, mapCamTempo={};
 
-  filtrados.forEach(r=>{
-    const h = r.horarios || {};
-    tTrabalho += computeTrabalho(h);
-    tDDS += diffMinutes(h.ddsChecklist, h.disposicao) || 0;
-    tEspera += diffMinutes(h.chegada, h.liberacaoPT) || 0;
+ filtrados.forEach(r=>{
+  const h = r.horarios || {};
 
-    const loc = r.local || "Não informado";
-    mapArea[loc] = (mapArea[loc]||0) + 1;
+  // Tempo Trabalhado
+  tTrabalho += computeTrabalho(h);
 
-    const placa = r.placa || "S/ Placa";
-    mapCamCount[placa] = (mapCamCount[placa]||0) + 1;
-    mapCamTempo[placa] = (mapCamTempo[placa]||0) + computeTrabalho(h);
-  });
+  // DDS é duração direta (ex: 00:30 ou 30)
+  tDDS += parseTimeToMinutes(h.ddsChecklist);
+
+  // Espera = chegada até início
+  tEspera += diffMinutes(h.chegada, h.inicio) || 0;
+
+  const loc = r.local || "Não informado";
+  mapArea[loc] = (mapArea[loc]||0) + 1;
+
+  const placa = r.placa || "S/ Placa";
+  mapCamCount[placa] = (mapCamCount[placa]||0) + 1;
+  mapCamTempo[placa] = (mapCamTempo[placa]||0) + computeTrabalho(h);
+});
 
   kpiTrabalhando.textContent = formatMinutesAsHhMm(tTrabalho);
   kpiDDS.textContent = formatMinutesAsHhMm(tDDS);
