@@ -583,14 +583,19 @@ function atualizarDashboard(){
   let tTrabalho=0, tDDS=0, tEspera=0;
   const mapArea={}, mapCamCount={}, mapCamTempo={};
 
- filtrados.forEach(r=>{
+const ddsContados = new Set();
+
+filtrados.forEach(r=>{
   const h = r.horarios || {};
 
   // Tempo Trabalhado
   tTrabalho += computeTrabalho(h);
 
-  // DDS é duração direta (ex: 00:30 ou 30)
-  tDDS += parseTimeToMinutes(h.ddsChecklist);
+  // 🔒 Controle de DDS único por dia + turno
+  if(r.ddsKey && !ddsContados.has(r.ddsKey)){
+    tDDS += parseTimeToMinutes(h.ddsChecklist);
+    ddsContados.add(r.ddsKey);
+  }
 
   // Espera = chegada até início
   tEspera += diffMinutes(h.chegada, h.inicio) || 0;
@@ -602,7 +607,6 @@ function atualizarDashboard(){
   mapCamCount[placa] = (mapCamCount[placa]||0) + 1;
   mapCamTempo[placa] = (mapCamTempo[placa]||0) + computeTrabalho(h);
 });
-
   kpiTrabalhando.textContent = formatMinutesAsHhMm(tTrabalho);
   kpiDDS.textContent = formatMinutesAsHhMm(tDDS);
   kpiEspera.textContent = formatMinutesAsHhMm(tEspera);
