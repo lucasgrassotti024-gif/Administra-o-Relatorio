@@ -1037,40 +1037,71 @@ analisarImportBtn.addEventListener("click", async () => {
     });
   }
 
-  linhas.forEach(l => {
+linhas.forEach(l => {
 
-    const col = l.split("\t");
-    const numeroPT = col[3];
+  const col = l.split("\t");
+  const numeroPT = col[3];
 
-    if(existentes.has(numeroPT)){
-      duplicados.push(numeroPT);
-      return;
-    }
+  if(existentes.has(numeroPT)){
+    duplicados.push(numeroPT);
+    return;
+  }
 
-    const data = converterDataBR(col[0]);
-    const chegada = col[9];
-    const inicio = col[10];
-    const fim = col[11];
-    const operador = col[17];
+  const data = converterDataBR(col[0]);
 
-    const grupo =
-      operador==="Carlos Alexandre" ? "VacuoADM" :
-      operador==="Bruno Ramos" ? "JatoADM" :
-      detectarTurno(inicio);
+  const equipamento = col[1] || "";
+  const placa = col[2] || "";
+  const tag = col[13] || "";                 // TAG REAL (771, 750 etc)
+  const local = col[14] || "";
+  const tipoServico = col[16] || "";
+  const solicitante = col[17] || "";
+  const emitenteAbertura = col[18] || "";
+  const emitenteEncerramento = col[19] || "";
+  const ajudante = col[20] || "";
+  const operador = col[21] || "";
+  const oleo = col[22] || "";
+  const tipoAtividade = col[23] || "";
+  const encerramentoPt = col[25] || "";
 
-    validos.push({
-      numeroPT,
-      data,
-      operador,
-      horarios:{
-        chegada,
-        inicio,
-        fim
-      },
-      grupoTurno:grupo,
-      ddsKey:`${data}_${grupo}`
-    });
+  const tempoDDS = col[7] || "";
+  const chegada = col[9] || "";
+  const inicio = col[10] || "";
+  const fim = col[11] || "";
+
+  const grupo =
+    operador==="Carlos Alexandre" ? "VacuoADM" :
+    operador==="Bruno Ramos" ? "JatoADM" :
+    detectarTurno(inicio);
+
+  validos.push({
+    numeroPT,
+    data,
+    equipamento,
+    placa,
+    tag,
+    local,
+    solicitante,
+    emitenteAbertura,
+    emitenteEncerramento,
+    operador,
+    ajudante,
+    tipoServico,
+    tipoAtividade,
+    oleo,
+    encerramentoPt,
+
+    horarios:{
+      ddsChecklist: tempoDDS,
+      chegada,
+      inicio,
+      fim
+    },
+
+    grupoTurno:grupo,
+    ddsKey:`${data}_${grupo}`
   });
+
+});
 
   let html = `
   📊 ${linhas.length} linhas encontradas<br>
