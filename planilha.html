@@ -1143,53 +1143,8 @@ async function confirmarImport(){
     return;
   }
 
-  const bloqueadosDDS = [];
-  const permitidos = [];
-
-  // 🔒 DDS únicos do lote
-  const ddsKeysUnicos = [...new Set(dados.map(d => d.ddsKey))];
-
-  // 🔎 Buscar DDS já existentes no banco
-  const ddsExistentes = new Set();
-
-  for(let i=0;i<ddsKeysUnicos.length;i+=10){
-    const bloco = ddsKeysUnicos.slice(i,i+10);
-    const snap = await db.collection("relatoriosCampo")
-      .where("ddsKey","in",bloco)
-      .get();
-
-    snap.forEach(doc=>{
-      const d = doc.data();
-      if(d.ddsKey){
-        ddsExistentes.add(d.ddsKey);
-      }
-    });
-  }
-
-  // 🔒 Controle interno do lote
-  const usadosNoLote = new Set();
-
-  for(let item of dados){
-
-    if(ddsExistentes.has(item.ddsKey)){
-      bloqueadosDDS.push(item.numeroPT + " (" + item.ddsKey + ")");
-      continue;
-    }
-
-    if(usadosNoLote.has(item.ddsKey)){
-      bloqueadosDDS.push(item.numeroPT + " (" + item.ddsKey + ")");
-      continue;
-    }
-
-    permitidos.push(item);
-    usadosNoLote.add(item.ddsKey);
-  }
-
-  if(permitidos.length === 0){
-    alert("Todos os registros foram bloqueados por DDS já existente.");
-    return;
-  }
-
+  const permitidos = dados;
+  
   let batch = db.batch();
   let count = 0;
 
@@ -1213,10 +1168,7 @@ async function confirmarImport(){
   let msg = `Importação concluída!\n\n`;
   msg += `✔ ${permitidos.length} registro(s) importado(s)\n`;
 
-  if(bloqueadosDDS.length){
-    msg += `\n❌ Bloqueados por DDS duplicado:\n`;
-    msg += bloqueadosDDS.join("\n");
-  }
+ 
 
   alert(msg);
 
