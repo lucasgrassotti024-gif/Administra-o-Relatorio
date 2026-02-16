@@ -593,11 +593,25 @@ applyLocalBtn.onclick=()=>{
 
 function aplicaFiltros(){
   const mes = filtroMesEl.value;
+
   filtrados = relatorios.filter(r=>{
-    if(mes && String(r.data).slice(5,7) !== mes) return false;
-    if(locaisSelecionados.size > 0 && !locaisSelecionados.has(r.local)) return false;
+
+    // Segurança para data inexistente
+    if(mes){
+      if(!r.data) return false;
+      const mesRegistro = String(r.data).slice(5,7);
+      if(mesRegistro !== mes) return false;
+    }
+
+    // Segurança para local inexistente
+    if(locaisSelecionados.size > 0){
+      if(!r.local) return false;
+      if(!locaisSelecionados.has(r.local)) return false;
+    }
+
     return true;
   });
+
   atualizarDashboard();
 }
 
@@ -625,7 +639,7 @@ const dataBase = r.data || "semData";
 const chaveDDS = `${dataBase}_${grupo}`;
 
 if(!ddsContados.has(chaveDDS)){
-  tDDS += parseTimeToMinutes(h.ddsChecklist);
+tDDS += parseTimeToMinutes(h.ddsChecklist || 0);
   ddsContados.add(chaveDDS);
 }
 
@@ -669,56 +683,51 @@ function renderCharts(mArea, mCamC, mCamT){
     });
   };
 
-  const setupTempoLine = (labels, dataMinutos) => {
-    const ctx = document.getElementById("chartTempoCaminhao").getContext("2d");
+ const setupTempoLine = (labels, dataMinutos) => {
+  const ctx = document.getElementById("chartTempoCaminhao").getContext("2d");
 
-    return new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [{
-          data: dataMinutos,
-          borderColor: "#2563eb",
-          backgroundColor: "#2563eb",
-          tension: 0.3,
-          fill: false,
-          pointRadius: 5,
-          pointHoverRadius: 7
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function(context){
-                const minutos = context.raw;
-                return "Tempo: " + formatMinutesAsHhMm(minutos);
-              }
+  return new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: dataMinutos,
+        borderColor: "#2563eb",
+        backgroundColor: "#2563eb",
+        tension: 0.3,
+        fill: false,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context){
+              const minutos = context.raw;
+              return "Tempo: " + formatMinutesAsHhMm(minutos);
             }
           }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-             ticks: {
-              stepSize: 30,
-              callback: function(value){
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 30,
+            callback: function(value){
               return formatMinutesAsHhMm(value);
-                }
-               }
-               ticks: {
-                callback: function(value){
-                 return formatMinutesAsHhMm(value);
-               }
-             }
-           }
-         }
-       }
-    });
-  };
+            }
+          }
+        }
+      }
+    }
+  });
+};
 
   if(chartArea) chartArea.destroy();
   if(chartCaminhao) chartCaminhao.destroy();
