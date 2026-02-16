@@ -648,19 +648,75 @@ if(!ddsContados.has(chaveDDS)){
 }
 
 function renderCharts(mArea, mCamC, mCamT){
-  const setup = (id, type, labels, data, isTime=false) => {
+
+  const setupBar = (id, labels, data) => {
     const ctx = document.getElementById(id).getContext("2d");
     return new Chart(ctx, {
-      type: type,
+      type: "bar",
       data: {
         labels: labels,
-        datasets: [{ data: data, backgroundColor: "#2563eb", borderRadius: 5 }]
+        datasets: [{
+          data: data,
+          backgroundColor: "#2563eb",
+          borderRadius: 5
+        }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
-        indexAxis: id === 'chartCaminhao' ? 'y' : 'x',
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } }
       }
+    });
+  };
+
+  const setupTempoLine = (labels, dataMinutos) => {
+    const ctx = document.getElementById("chartTempoCaminhao").getContext("2d");
+
+    return new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          data: dataMinutos,
+          borderColor: "#2563eb",
+          backgroundColor: "#2563eb",
+          tension: 0.3,
+          fill: false,
+          pointRadius: 5,
+          pointHoverRadius: 7
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context){
+                const minutos = context.raw;
+                return "Tempo: " + formatMinutesAsHhMm(minutos);
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+             ticks: {
+              stepSize: 30,
+              callback: function(value){
+              return formatMinutesAsHhMm(value);
+                }
+               }
+               ticks: {
+                callback: function(value){
+                 return formatMinutesAsHhMm(value);
+               }
+             }
+           }
+         }
+       }
     });
   };
 
@@ -668,11 +724,11 @@ function renderCharts(mArea, mCamC, mCamT){
   if(chartCaminhao) chartCaminhao.destroy();
   if(chartTempoCaminhao) chartTempoCaminhao.destroy();
 
-  chartArea = setup("chartArea", "bar", Object.keys(mArea), Object.values(mArea));
-  chartCaminhao = setup("chartCaminhao", "bar", Object.keys(mCamC), Object.values(mCamC));
-  chartTempoCaminhao = setup("chartTempoCaminhao", "line", Object.keys(mCamT), Object.values(mCamT));
+  chartArea = setupBar("chartArea", Object.keys(mArea), Object.values(mArea));
+  chartCaminhao = setupBar("chartCaminhao", Object.keys(mCamC), Object.values(mCamC));
+  chartTempoCaminhao = setupTempoLine(Object.keys(mCamT), Object.values(mCamT));
 }
-
+  
 async function carregarDados(){
   try {
     const snap = await db.collection("relatoriosCampo").get();
