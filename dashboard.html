@@ -550,6 +550,31 @@ function computeTrabalho(h){
   return base > 0 ? base : 0;
 }
 
+function horaParaMin(h){
+  if(!h || !h.includes(":")) return 0;
+  const [hh,mm] = h.split(":");
+  return parseInt(hh)*60 + parseInt(mm);
+}
+
+function detectarGrupo(inicio, operador){
+
+  // ADM primeiro
+  if(operador === "Bruno Ramos") return "JatoADM";
+  if(operador === "Carlos Alexandre") return "VacuoADM";
+
+  const min = horaParaMin(inicio);
+
+  // T1 → 07:30 até 12:00
+  if(min >= 450 && min <= 720) return "T1";
+
+  // T2 → 12:01 até 17:00
+  if(min >= 721 && min <= 1020) return "T2";
+
+  // T3 → 17:01 até 07:29 (virada de dia)
+  return "T3";
+}
+  
+
 /* Multi-select Locais */
 btnLocal.onclick=(e)=>{
   e.stopPropagation();
@@ -591,11 +616,18 @@ filtrados.forEach(r=>{
   // Tempo Trabalhado
   tTrabalho += computeTrabalho(h);
 
-  // 🔒 Controle de DDS único por dia + turno
-  if(r.ddsKey && !ddsContados.has(r.ddsKey)){
-    tDDS += parseTimeToMinutes(h.ddsChecklist);
-    ddsContados.add(r.ddsKey);
-  }
+ // 🔒 DDS único por dia + grupo (T1, T2, T3, ADM)
+const operador = r.operador || "";
+const inicio = h.inicio || "00:00";
+const grupo = detectarGrupo(inicio, operador);
+
+const dataBase = r.data || "semData";
+const chaveDDS = `${dataBase}_${grupo}`;
+
+if(!ddsContados.has(chaveDDS)){
+  tDDS += parseTimeToMinutes(h.ddsChecklist);
+  ddsContados.add(chaveDDS);
+}
 
   // Espera = chegada até início
   tEspera += diffMinutes(h.chegada, h.inicio) || 0;
