@@ -431,6 +431,10 @@ body.sidebar-open .sidebar{
 
   <div class="filters">
     <div class="filter-chip">
+  <span>Nº PT</span>
+  <input id="filtroPT" type="text" placeholder="Digite o número...">
+</div>
+    <div class="filter-chip">
       <span>Mês</span>
       <select id="filtroMes">
         <option value="">Todos</option>
@@ -534,6 +538,7 @@ const infoCount=document.getElementById("infoCount");
 const filtroMes=document.getElementById("filtroMes");
 const filtroPlaca=document.getElementById("filtroPlaca");
 const filtroLocal=document.getElementById("filtroLocal");
+const filtroPT = document.getElementById("filtroPT");  
 
 const modal=document.getElementById("modal");
 const modalClose=document.getElementById("modalClose");
@@ -704,20 +709,36 @@ function renderCards(){
 /* ===== filtros ===== */
 filtroMes.onchange =
 filtroPlaca.oninput =
-filtroLocal.oninput = aplicarFiltros;
+filtroLocal.oninput =
+filtroPT.oninput = aplicarFiltros;
 
 function aplicarFiltros(){
-  const mes=filtroMes.value;
-  const placaTxt=filtroPlaca.value.trim().toLowerCase();
-  const localTxt=filtroLocal.value.trim().toLowerCase();
+  const mes = filtroMes.value;
+  const placaTxt = filtroPlaca.value.trim().toLowerCase();
+  const localTxt = filtroLocal.value.trim().toLowerCase();
+  const ptTxt = filtroPT.value.trim().toLowerCase();
 
   relatoriosFiltrados = relatoriosAll.filter(r=>{
+
+    // Filtro mês
     if(r.data && mes){
-      const m=String(r.data).slice(5,7);
-      if(m!==mes) return false;
+      const m = String(r.data).slice(5,7);
+      if(m !== mes) return false;
     }
-    if(placaTxt && !(r.placa||"").toLowerCase().includes(placaTxt)) return false;
-    if(localTxt && !(r.local||"").toLowerCase().includes(localTxt)) return false;
+
+    // Filtro placa
+    if(placaTxt && !(r.placa||"").toLowerCase().includes(placaTxt))
+      return false;
+
+    // Filtro local
+    if(localTxt && !(r.local||"").toLowerCase().includes(localTxt))
+      return false;
+
+    // 🔥 Filtro Nº PT
+    const numeroPT = (r.numeroPT || r.numeroPt || "").toString().toLowerCase();
+    if(ptTxt && !numeroPT.includes(ptTxt))
+      return false;
+
     return true;
   });
 
@@ -747,7 +768,7 @@ async function excluirRelatorio(r){
 async function carregarRelatorios(){
   try{
     infoCount.textContent="Carregando dados do Firebase...";
-    const snap = await db.collection("relatoriosCampo").orderBy("numeroPT","desc").get();
+    const snap = await db.collection("relatoriosCampo").get();
     relatoriosAll = snap.docs.map(doc => {
       const d = doc.data();
       return {
@@ -755,6 +776,22 @@ async function carregarRelatorios(){
         ...d
       };
     });
+
+    // 🔥 Ordenar por DATA da atividade (mais recente primeiro)
+relatoriosAll.sort((a,b)=>{
+  if(!a.data) return 1;
+  if(!b.data) return -1;
+
+  const da = new Date(a.data.includes("/") 
+    ? a.data.split("/").reverse().join("-") 
+    : a.data);
+
+  const dbb = new Date(b.data.includes("/") 
+    ? b.data.split("/").reverse().join("-") 
+    : b.data);
+
+  return dbb - da;
+});
 
     // opcional: também poderíamos mostrar/exibir excluídos se você quiser
     relatoriosFiltrados = [...relatoriosAll];
@@ -768,6 +805,7 @@ async function carregarRelatorios(){
 
 /* inicial */
 carregarRelatorios();
+  
 </script>
 
 </body>
