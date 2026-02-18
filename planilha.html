@@ -703,7 +703,8 @@ const columns=[
   {key:"observacoes",         label:"Observações",           editable:true},
   {key:"criadoEm",            label:"Criado em",             editable:false},
   {key:"deviceId",            label:"Device ID",             editable:false, advanced:true},
-  {key:"operadorIdFixo",      label:"Operador ID",           editable:false, advanced:true}
+  {key:"operadorIdFixo",      label:"Operador ID",           editable:false, advanced:true},
+  {key:"acaoExcluir",         label:"Excluir",               editable:false}
 ];
 
 let relatoriosRaw=[];
@@ -787,25 +788,66 @@ function renderHeader(){
   });
 }
 
-function renderBody(){
+  function renderBody(){
   sheetBody.innerHTML="";
+
   relatoriosFiltrados.forEach(r=>{
     const tr=document.createElement("tr");
     tr.dataset.id=r.id;
+
     columns.forEach(col=>{
       const td=document.createElement("td");
       td.dataset.col=col.key;
-      if(col.advanced) td.classList.add("advanced-col");
-      let val = r[col.key];
-      if(col.key==="duracaoMinutos"){
-        const n=parseInt(val,10);
-        val = isNaN(n) ? "" : formatMinutesAsHhMm(n);
+
+      // BOTÃO EXCLUIR
+      if(col.key==="acaoExcluir"){
+
+        td.innerHTML = `
+          <button style="
+            background:#dc2626;
+            color:white;
+            border:none;
+            border-radius:6px;
+            padding:4px 8px;
+            cursor:pointer;
+            font-size:.75rem;
+          ">
+            🗑️
+          </button>
+        `;
+
+        td.querySelector("button").addEventListener("click", async ()=>{
+          const confirmar = confirm("Deseja realmente excluir este relatório?");
+          if(!confirmar) return;
+
+          try{
+            await db.collection("relatoriosCampo").doc(r.id).delete();
+          }catch(err){
+            alert("Erro ao excluir.");
+            console.error(err);
+          }
+        });
+
+      } else {
+
+        if(col.advanced) td.classList.add("advanced-col");
+
+        let val = r[col.key];
+
+        if(col.key==="duracaoMinutos"){
+          const n=parseInt(val,10);
+          val = isNaN(n) ? "" : formatMinutesAsHhMm(n);
+        }
+
+        if(val==null) val="";
+        td.textContent=String(val);
+
+        if(col.editable) td.contentEditable="true";
       }
-      if(val==null) val="";
-      td.textContent=String(val);
-      if(col.editable) td.contentEditable="true";
+
       tr.appendChild(td);
     });
+
     sheetBody.appendChild(tr);
   });
 }
@@ -911,7 +953,7 @@ btnExportCsv.addEventListener("click",()=>{
 
 function carregarRelatoriosRealtime(){
   subtitleInfo.textContent="Carregando dados do Firebase...";
-  db.collection("relatoriosCampo").orderBy("numeroPT","desc").onSnapshot((snap) => {
+  db.collection("relatoriosCampo").onSnapshot((snap) => {
     relatoriosRaw=[];
     snap.docs.forEach(doc=>{
       const d = doc.data();
@@ -958,6 +1000,24 @@ function carregarRelatoriosRealtime(){
         operadorIdFixo: d.operadorIdFixo || ""
       });
     });
+
+// 🔥 ORDENAR POR DATA DA ATIVIDADE (mais recente primeiro)
+relatoriosRaw.sort((a,b)=>{
+  if(!a.data) return 1;
+  if(!b.data) return -1;
+
+  const da = new Date(a.data.includes("/") 
+    ? a.data.split("/").reverse().join("-") 
+    : a.data);
+
+  const dbb = new Date(b.data.includes("/") 
+    ? b.data.split("/").reverse().join("-") 
+    : b.data);
+
+  return dbb - da;
+});
+
+    
     if(sheetHeaderRow.innerHTML==="") renderHeader();
     aplicarFiltrosEAtualizar();
   }, (err) => {
