@@ -1,13 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dashboard — Relatórios de Campo</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+datalabels@2"></script>
   
 <style>
 :root {
@@ -484,11 +476,6 @@ if(localStorage.getItem("tema")==="dark"){
   document.body.classList.add("dark");
   themeToggle.textContent="☀️";
 }
-themeToggle.onclick=()=>{
-  const isDark = document.body.classList.toggle("dark");
-  themeToggle.textContent = isDark ? "☀️" : "🌙";
-  localStorage.setItem("tema", isDark ? "dark" : "light");
-};
 
 const sidebarHandle=document.getElementById("sidebarHandle");
 sidebarHandle.addEventListener("click",()=>{
@@ -516,6 +503,15 @@ const kpiEspera=document.getElementById("kpiEspera");
 
 let chartArea=null, chartCaminhao=null, chartTempoCaminhao=null;
 
+themeToggle.onclick=()=>{
+  const isDark = document.body.classList.toggle("dark");
+  themeToggle.textContent = isDark ? "☀️" : "🌙";
+  localStorage.setItem("tema", isDark ? "dark" : "light");
+
+  // 🔄 Recria os gráficos para atualizar cor dos labels
+  atualizarDashboard();
+};
+  
 /* Helpers de Tempo */
 function parseTimeToMinutes(str){
   if(!str) return 0;
@@ -665,6 +661,12 @@ tDDS += parseTimeToMinutes(h.ddsChecklist || 0);
   miniSummaryEl.textContent = filtrados.length > 0 ? "Dados atualizados com sucesso." : "Nenhum dado encontrado para os filtros.";
 }
 
+function getLabelColor(){
+  return document.body.classList.contains("dark")
+    ? "#ffffff"   // branco forte no dark
+    : "#111827";  // preto forte no light
+}
+  
 function renderCharts(mArea, mCamC, mCamT){
 
   const areaOrdenada = Object.entries(mArea)
@@ -703,14 +705,14 @@ function renderCharts(mArea, mCamC, mCamT){
       plugins: {
         legend: { display: false },
         datalabels: {
-          color: document.body.classList.contains("dark") ? "#e5e7eb" : "#111827",
+         color: getLabelColor(),
           anchor: "end",
           align: "top",
+          offset: 4,
           font: { weight: "bold", size: 11 },
-          formatter: function(value){
-            return value;
-          }
-        }
+          textStrokeColor: "rgba(0,0,0,0.8)",
+          textStrokeWidth: 2,
+       }
       }
     }
   });
@@ -739,14 +741,19 @@ function renderCharts(mArea, mCamC, mCamT){
         plugins: {
           legend: { display: false },
           datalabels: {
-            color: "#111827",
-            align: "top",
+          color: getLabelColor(),
+           align: "top",
+            offset: 6,
             font: { weight: "bold", size: 11 },
+            textStrokeColor: document.body.classList.contains("dark")
+            ? "rgba(0,0,0,0.9)"
+            : "rgba(255,255,255,0.9)",
+            textStrokeWidth: 2,
             formatter: function(value){
-              return formatMinutesAsHhMm(value);
-            }
+            return formatMinutesAsHhMm(value);
+           }
           }
-        },
+         },
         scales: {
           y: {
             beginAtZero: true,
