@@ -7,7 +7,8 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  
 <style>
 :root {
   --primary:#2563eb;
@@ -456,6 +457,9 @@ footer{ margin-top:16px; font-size:.75rem; color:var(--muted); text-align:center
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
+
+Chart.register(ChartDataLabels);
+  
 // ATUALIZADO PARA O NOVO PROJETO relatorio-rss3-15896
 const firebaseConfig = {
   apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
@@ -663,41 +667,34 @@ tDDS += parseTimeToMinutes(h.ddsChecklist || 0);
 
 function renderCharts(mArea, mCamC, mCamT){
 
-  const setupBar = (id, labels, data) => {
-    const ctx = document.getElementById(id).getContext("2d");
-    return new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: labels,
-        datasets: [{
-          data: data,
-          backgroundColor: "#2563eb",
-          borderRadius: 5
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } }
-      }
-    });
-  };
+  const areaOrdenada = Object.entries(mArea)
+    .sort((a,b)=> b[1] - a[1]);
 
- const setupTempoLine = (labels, dataMinutos) => {
-  const ctx = document.getElementById("chartTempoCaminhao").getContext("2d");
+  const areaLabels = areaOrdenada.map(e=>e[0]);
+  const areaValues = areaOrdenada.map(e=>e[1]);
 
+  const tempoOrdenado = Object.entries(mCamT)
+    .sort((a,b)=> b[1] - a[1]);
+
+  const camTempoLabels = tempoOrdenado.map(e=>e[0]);
+  const camTempoValues = tempoOrdenado.map(e=>e[1]);
+
+  const camCountOrdenado = Object.entries(mCamC)
+    .sort((a,b)=> b[1] - a[1]);
+
+  const camCountLabels = camCountOrdenado.map(e=>e[0]);
+  const camCountValues = camCountOrdenado.map(e=>e[1]);
+
+ const setupBar = (id, labels, data) => {
+  const ctx = document.getElementById(id).getContext("2d");
   return new Chart(ctx, {
-    type: "line",
+    type: "bar",
     data: {
       labels: labels,
       datasets: [{
-        data: dataMinutos,
-        borderColor: "#2563eb",
+        data: data,
         backgroundColor: "#2563eb",
-        tension: 0.3,
-        fill: false,
-        pointRadius: 5,
-        pointHoverRadius: 7
+        borderRadius: 5
       }]
     },
     options: {
@@ -705,23 +702,13 @@ function renderCharts(mArea, mCamC, mCamT){
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: function(context){
-              const minutos = context.raw;
-              return "Tempo: " + formatMinutesAsHhMm(minutos);
-            }
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 30,
-            callback: function(value){
-              return formatMinutesAsHhMm(value);
-            }
+        datalabels: {
+          color: document.body.classList.contains("dark") ? "#e5e7eb" : "#111827",
+          anchor: "end",
+          align: "top",
+          font: { weight: "bold", size: 11 },
+          formatter: function(value){
+            return value;
           }
         }
       }
@@ -729,13 +716,58 @@ function renderCharts(mArea, mCamC, mCamT){
   });
 };
 
+  const setupTempoLine = (labels, dataMinutos) => {
+    const ctx = document.getElementById("chartTempoCaminhao").getContext("2d");
+
+    return new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          data: dataMinutos,
+          borderColor: "#2563eb",
+          backgroundColor: "#2563eb",
+          tension: 0.3,
+          fill: false,
+          pointRadius: 5,
+          pointHoverRadius: 7
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            color: "#111827",
+            align: "top",
+            font: { weight: "bold", size: 11 },
+            formatter: function(value){
+              return formatMinutesAsHhMm(value);
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value){
+                return formatMinutesAsHhMm(value);
+              }
+            }
+          }
+        }
+      }
+    });
+  };
+
   if(chartArea) chartArea.destroy();
   if(chartCaminhao) chartCaminhao.destroy();
   if(chartTempoCaminhao) chartTempoCaminhao.destroy();
 
-  chartArea = setupBar("chartArea", Object.keys(mArea), Object.values(mArea));
-  chartCaminhao = setupBar("chartCaminhao", Object.keys(mCamC), Object.values(mCamC));
-  chartTempoCaminhao = setupTempoLine(Object.keys(mCamT), Object.values(mCamT));
+  chartArea = setupBar("chartArea", areaLabels, areaValues);
+  chartCaminhao = setupBar("chartCaminhao", camCountLabels, camCountValues);
+  chartTempoCaminhao = setupTempoLine(camTempoLabels, camTempoValues);
 }
   
 async function carregarDados(){
