@@ -714,13 +714,12 @@ function renderCharts(mArea, mCamC, mCamT){
       plugins: {
         legend: { display: false },
         datalabels: {
-         color: getLabelColor(),
-          anchor: "end",
-          align: "top",
-          offset: 4,
-          font: { weight: "bold", size: 11 },
-          textStrokeColor: "rgba(0,0,0,0.8)",
-          textStrokeWidth: 2,
+        color: getLabelColor(),
+        anchor: "end",
+         align: "top",
+         offset: 4,
+          font: { size: 10 }, // remove o bold
+          textStrokeWidth: 0  // remove contorno pesado
        }
       }
     }
