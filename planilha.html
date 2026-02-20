@@ -446,6 +446,7 @@ footer{
   gap:8px;
 }
 
+ 
   
 </style>
 </head>
@@ -517,6 +518,19 @@ footer{
 <button type="button" class="primary" id="btnImportExcel">
   📥 Importar Excel
 </button>
+
+     <!-- 🔎 BUSCA GLOBAL -->
+  <input type="text" id="globalSearch"
+    placeholder="🔎 Buscar em toda planilha..."
+    style="
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--card);
+      font-size:.8rem;
+      min-width:220px;
+    ">
+    
   </div>
 
   <div class="table-wrapper" id="tableWrapper">
@@ -711,6 +725,16 @@ let relatoriosRaw=[];
 let relatoriosFiltrados=[];
 let activeFilters={};
 
+let globalSearchTerm = "";
+
+const globalSearch = document.getElementById("globalSearch");
+if(globalSearch){
+  globalSearch.addEventListener("input", () => {
+    globalSearchTerm = globalSearch.value.toLowerCase();
+    aplicarFiltrosEAtualizar();
+  });
+}
+
 const colFilterPanel=document.getElementById("colFilterPanel");
 const colFilterTitle=document.getElementById("colFilterTitle");
 const colFilterList=document.getElementById("colFilterList");
@@ -854,14 +878,26 @@ function renderHeader(){
 
 function aplicarFiltrosEAtualizar(){
   relatoriosFiltrados = relatoriosRaw.filter(r=>{
+
+    // Filtro por coluna
     for(const [colKey,set] of Object.entries(activeFilters)){
       if(set && set.size>0){
         const v=String(r[colKey] ?? "").trim();
         if(!set.has(v)) return false;
       }
     }
+
+    // 🔎 Filtro global por palavra
+    if(globalSearchTerm){
+      const match = Object.values(r).some(val =>
+        String(val ?? "").toLowerCase().includes(globalSearchTerm)
+      );
+      if(!match) return false;
+    }
+
     return true;
   });
+
   subtitleInfo.textContent = `${relatoriosFiltrados.length} relatório(s) exibido(s)`;
   renderBody();
 }
@@ -1237,6 +1273,53 @@ async function confirmarImport(){
   importResult.innerHTML = "";
 }
 
+  sheetBody.addEventListener("keydown", async (e) => {
+
+  if(e.ctrlKey && e.key.toLowerCase() === "d"){
+
+    e.preventDefault();
+
+    const td = e.target;
+    if(td.tagName !== "TD") return;
+
+    const tr = td.closest("tr");
+    const prevRow = tr.previousElementSibling;
+    if(!prevRow) return;
+
+    const colIndex = Array.from(tr.children).indexOf(td);
+    const prevTd = prevRow.children[colIndex];
+    if(!prevTd) return;
+
+    const valor = prevTd.textContent.trim();
+    td.textContent = valor;
+
+    const id = tr.dataset.id;
+    const colKey = td.dataset.col;
+
+    if(!colKey) return;
+
+    let newValue = valor;
+
+    if(colKey==="duracaoMinutos"){
+      const mins = parseDurationInputToMinutes(valor);
+      if(mins==null) return;
+      newValue = mins;
+      td.textContent = formatMinutesAsHhMm(mins);
+    }
+
+    try{
+      const updatePayload = buildUpdatePayload(colKey,newValue);
+      await db.collection("relatoriosCampo").doc(id).update(updatePayload);
+
+      const obj=relatoriosRaw.find(r=>r.id===id);
+      if(obj) obj[colKey]=newValue;
+
+    }catch(err){
+      console.error("Erro Ctrl+D:",err);
+    }
+  }
+
+});
   
 </script>
 </body>
