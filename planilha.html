@@ -9,6 +9,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
+tr.selected-row {
+  background: rgba(37,99,235,0.25) !important;
+}
+  
 :root {
   --primary:#2563eb;
   --accent:#1d4ed8;
@@ -509,6 +514,19 @@ footer{
   </header>
 
   <div class="table-actions">
+
+    <button type="button" id="btnExcluirSelecionadas"
+  style="
+    background:#b91c1c;
+    color:white;
+    border:none;
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:.78rem;
+    cursor:pointer;
+  ">
+  🗑️ Excluir selecionadas
+</button>
 
 <button type="button" id="btnExcluirTodos"
   style="
@@ -1260,14 +1278,14 @@ async function confirmarImport(){
 
   for(let i=0;i<permitidos.length;i++){
 
-    const ref = db.collection("relatoriosCampo").doc();
-    batch.set(ref, permitidos[i]);
-    count++;
+     const ref = db.collection("relatoriosCampo").doc();
+     batch.set(ref, permitidos[i]);
+     count++;
 
-    if(count>=450){
-      await batch.commit();
-      batch = db.batch();
-      count = 0;
+      if(count >= 450){
+     await batch.commit();
+     batch = db.batch();
+     count = 0;
     }
   }
 
@@ -1390,6 +1408,120 @@ btnExcluirTodos.addEventListener("click", async () => {
   } catch(err){
     console.error(err);
     alert("Erro ao excluir relatórios.");
+  }
+
+});
+
+/* ============================
+   SELEÇÃO MÚLTIPLA DE LINHAS
+============================ */
+
+let isSelecting = false;
+let startRowIndex = null;
+let selectedIds = new Set();
+
+const btnExcluirSelecionadas = document.getElementById("btnExcluirSelecionadas");
+
+function limparSelecaoVisual(){
+  document.querySelectorAll("#sheetBody tr").forEach(tr=>{
+    tr.classList.remove("selected-row");
+  });
+}
+
+function atualizarSelecaoVisual(){
+  limparSelecaoVisual();
+  document.querySelectorAll("#sheetBody tr").forEach(tr=>{
+    if(selectedIds.has(tr.dataset.id)){
+      tr.classList.add("selected-row");
+    }
+  });
+}
+
+sheetBody.addEventListener("mousedown", (e)=>{
+  const tr = e.target.closest("tr");
+  if(!tr) return;
+
+  isSelecting = true;
+  selectedIds.clear();
+
+  const rows = Array.from(sheetBody.querySelectorAll("tr"));
+  startRowIndex = rows.indexOf(tr);
+
+  selectedIds.add(tr.dataset.id);
+  atualizarSelecaoVisual();
+});
+
+sheetBody.addEventListener("mouseover", (e)=>{
+  if(!isSelecting) return;
+
+  const tr = e.target.closest("tr");
+  if(!tr) return;
+
+  const rows = Array.from(sheetBody.querySelectorAll("tr"));
+  const currentIndex = rows.indexOf(tr);
+
+  selectedIds.clear();
+
+  const [start,end] = [startRowIndex,currentIndex].sort((a,b)=>a-b);
+
+  for(let i=start;i<=end;i++){
+    selectedIds.add(rows[i].dataset.id);
+  }
+
+  atualizarSelecaoVisual();
+});
+
+document.addEventListener("mouseup", ()=>{
+  isSelecting = false;
+});
+
+
+/* ============================
+   EXCLUIR SELECIONADAS
+============================ */
+
+btnExcluirSelecionadas.addEventListener("click", async ()=>{
+
+  if(selectedIds.size === 0){
+    alert("Nenhuma linha selecionada.");
+    return;
+  }
+
+  const confirmar = confirm(
+    `Deseja excluir ${selectedIds.size} relatório(s)?`
+  );
+
+  if(!confirmar) return;
+
+  try {
+
+    let batch = db.batch();
+    let count = 0;
+
+    selectedIds.forEach(id=>{
+      const ref = db.collection("relatoriosCampo").doc(id);
+      batch.delete(ref);
+      count++;
+
+      if(count >= 450){
+        batch.commit();
+        batch = db.batch();
+        count = 0;
+      }
+    });
+
+    if(count > 0){
+      await batch.commit();
+    }
+
+    selectedIds.clear();
+    atualizarSelecaoVisual();
+
+    alert("Registros excluídos com sucesso.");
+
+  } catch(err){
+    console.error(err);
+    alert("Erro ao excluir.");
   }
 
 });
