@@ -509,6 +509,20 @@ footer{
   </header>
 
   <div class="table-actions">
+
+<button type="button" id="btnExcluirTodos"
+  style="
+    background:#dc2626;
+    color:white;
+    border:none;
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:.78rem;
+    cursor:pointer;
+  ">
+  🗑️ Excluir TODOS
+</button>
+    
     <button type="button" id="btnToggleAdvanced">
       <span id="labelAdvanced">Mostrar colunas avançadas</span>
     </button>
@@ -1317,6 +1331,65 @@ async function confirmarImport(){
     }catch(err){
       console.error("Erro Ctrl+D:",err);
     }
+  }
+
+});
+
+  /* ==============================
+   EXCLUIR TODOS RELATÓRIOS
+============================== */
+
+const btnExcluirTodos = document.getElementById("btnExcluirTodos");
+
+btnExcluirTodos.addEventListener("click", async () => {
+
+  const confirmacao = confirm(
+    "⚠️ ATENÇÃO!\n\nIsso vai excluir TODOS os relatórios do sistema.\n\nDeseja continuar?"
+  );
+
+  if(!confirmacao) return;
+
+  const confirmacaoFinal = prompt(
+    "Digite EXCLUIR para confirmar definitivamente:"
+  );
+
+  if(confirmacaoFinal !== "EXCLUIR"){
+    alert("Operação cancelada.");
+    return;
+  }
+
+  try {
+
+    const snapshot = await db.collection("relatoriosCampo").get();
+
+    if(snapshot.empty){
+      alert("Não existem relatórios para excluir.");
+      return;
+    }
+
+    let batch = db.batch();
+    let count = 0;
+
+    snapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+      count++;
+
+      if(count === 450){
+        batch.commit();
+        batch = db.batch();
+        count = 0;
+      }
+    });
+
+    if(count > 0){
+      await batch.commit();
+    }
+
+    alert("Todos os relatórios foram excluídos com sucesso.");
+
+  } catch(err){
+    console.error(err);
+    alert("Erro ao excluir relatórios.");
   }
 
 });
