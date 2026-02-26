@@ -1168,7 +1168,7 @@ analisarImportBtn.addEventListener("click", async () => {
 linhas.forEach(l => {
 
   const col = l.split("\t");
-  const numeroPT = col[0];
+  const numeroPT = col[3];
 
   if(existentes.has(numeroPT)){
     duplicados.push(numeroPT);
