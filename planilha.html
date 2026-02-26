@@ -1151,7 +1151,7 @@ analisarImportBtn.addEventListener("click", async () => {
   const validos = [];
   const duplicados = [];
 
-  const pts = linhas.map(l => l.split("\t")[3]);
+  const pts = linhas.map(l => l.split("\t")[0]);
 
   // Firestore limita IN a 10 por vez
   const existentes = new Set();
@@ -1168,7 +1168,7 @@ analisarImportBtn.addEventListener("click", async () => {
 linhas.forEach(l => {
 
   const col = l.split("\t");
-  const numeroPT = col[3];
+  const numeroPT = col[0];
 
   if(existentes.has(numeroPT)){
     duplicados.push(numeroPT);
