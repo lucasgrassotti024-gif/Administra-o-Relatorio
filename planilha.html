@@ -1151,8 +1151,15 @@ analisarImportBtn.addEventListener("click", async () => {
   const validos = [];
   const duplicados = [];
 
-  const pts = linhas.map(l => l.split("\t")[0]);
-
+ const pts = linhas
+  .map(l => {
+    const c = l.split("\t");
+    if(c.length >= 28) return c[3];
+    if(c.length >= 9) return c[2];
+    return null;
+  })
+  .filter(pt => pt); // remove null
+  
   // Firestore limita IN a 10 por vez
   const existentes = new Set();
   for(let i=0;i<pts.length;i+=10){
@@ -1168,66 +1175,117 @@ analisarImportBtn.addEventListener("click", async () => {
 linhas.forEach(l => {
 
   const col = l.split("\t");
-  const numeroPT = col[3];
 
+  // 🔵 MODELO COMPLETO (28 colunas)
+// 🔵 MODELO COMPLETO (28 colunas)
+if(col.length >= 28){
+
+  const numeroPT = col[3];
   if(existentes.has(numeroPT)){
     duplicados.push(numeroPT);
     return;
   }
 
-  const data = converterDataBR(col[0]);
-
-  const equipamento = col[1] || "";
-  const placa = col[2] || "";
-  const tag = col[13] || "";                 // TAG REAL (771, 750 etc)
-  const local = col[14] || "";
-  const tipoServico = col[16] || "";
-  const solicitante = col[17] || "";
-  const emitenteAbertura = col[18] || "";
-  const emitenteEncerramento = col[19] || "";
-  const ajudante = col[20] || "";
-  const operador = col[21] || "";
-  const oleo = col[22] || "";
-  const tipoAtividade = col[23] || "";
-  const encerramentoPt = col[25] || "";
-
-  const tempoDDS = col[7] || "";
-  const chegada = col[9] || "";
-  const inicio = col[10] || "";
-  const fim = col[11] || "";
-
-  const grupo =
-    operador==="Carlos Alexandre" ? "VacuoADM" :
-    operador==="Bruno Ramos" ? "JatoADM" :
-    detectarTurno(inicio);
+  // Converter duração se vier preenchida
+  let duracaoMinutos = "";
+  if(col[12]){ // Tempo de trabalho
+    const partes = col[12].split(":");
+    if(partes.length >= 2){
+      const h = parseInt(partes[0]) || 0;
+      const m = parseInt(partes[1]) || 0;
+      duracaoMinutos = (h * 60) + m;
+    }
+  }
 
   validos.push({
     numeroPT,
-    data,
-    equipamento,
-    placa,
-    tag,
-    local,
-    solicitante,
-    emitenteAbertura,
-    emitenteEncerramento,
-    operador,
-    ajudante,
-    tipoServico,
-    tipoAtividade,
-    oleo,
-    encerramentoPt,
+    data: converterDataBR(col[0]),
+    equipamento: col[1] || "",
+    placa: col[2] || "",
+    tag: col[13] || "",
+    local: col[14] || "",
+    solicitante: col[17] || "",
+    emitenteAbertura: col[18] || "",
+    emitenteEncerramento: col[19] || "",
+    operador: col[20] || "",
+    ajudante: col[21] || "",
+    tipoServico: col[16] || "",
+    tipoAtividade: col[23] || "",
+    oleo: col[22] || "",
+    quantidade: col[24] || "",
+    encerramentoPt: col[25] || "",
+    motivoNaoFinalizada: col[26] || "",
+    observacoes: col[27] || "",
+    duracaoMinutos,
 
     horarios:{
-      ddsChecklist: tempoDDS,
-      chegada,
-      inicio,
-      fim
-    },
-
-    grupoTurno:grupo,
-    ddsKey:`${data}_${grupo}`
+      ddsChecklist: col[7] || "",
+      chegada: col[9] || "",
+      inicio: col[10] || "",
+      fim: col[11] || ""
+    }
   });
+
+  return;
+}
+
+ // 🟢 MODELO SIMPLIFICADO (9 colunas)
+if(col.length >= 9){
+
+  const numeroPT = col[2];
+  if(existentes.has(numeroPT)){
+    duplicados.push(numeroPT);
+    return;
+  }
+
+  // Converter duração 3:20:00 para minutos
+  let duracaoMinutos = "";
+  if(col[6]){
+    const partes = col[6].split(":");
+    if(partes.length >= 2){
+      const h = parseInt(partes[0]) || 0;
+      const m = parseInt(partes[1]) || 0;
+      duracaoMinutos = (h * 60) + m;
+    }
+  }
+
+  validos.push({
+    numeroPT,
+    data: converterDataBR(col[0]),
+    diaSemana: "",
+    equipamento: "",
+    placa: col[1] || "",
+    tag: "",
+    local: col[7] || "",
+    solicitante: "",
+    emitenteAbertura: "",
+    emitenteEncerramento: "",
+    operador: "",
+    ajudante: "",
+    tipoServico: col[8] || "",
+    tipoAtividade: "",
+    oleo: "",
+    quantidade: "",
+    encerramentoPt: "",
+    motivoNaoFinalizada: "",
+    observacoes: "",
+    duracaoMinutos,
+
+    horarios:{
+      ddsChecklist: "",
+      disposicao: "",
+      chegada: "",
+      liberacaoPT: "",
+      inicio: col[4] || "",
+      fim: col[5] || "",
+      inicioIntervalo: "",
+      fimIntervalo: "",
+      trocaTurno: ""
+    }
+  });
+
+  return;
+}
 
 });
 
