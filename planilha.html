@@ -745,7 +745,6 @@ const columns=[
   {key:"quantidade",          label:"Qtd Óleo",              editable:true},
   {key:"encerramentoPt",      label:"Encerramento PT",       editable:true},
   {key:"motivoNaoFinalizada", label:"Motivo Não Finalizada", editable:true},
-  {key:"duracaoMinutos",      label:"Duração (hh:mm)",       editable:true},
   {key:"observacoes",         label:"Observações",           editable:true},
   {key:"criadoEm",            label:"Criado em",             editable:false},
   {key:"deviceId",            label:"Device ID",             editable:false, advanced:true},
@@ -890,11 +889,7 @@ function renderHeader(){
 
         let val = r[col.key];
 
-        if(col.key==="duracaoMinutos"){
-          const n=parseInt(val,10);
-          val = isNaN(n) ? "" : formatMinutesAsHhMm(n);
-        }
-
+        
         if(val==null) val="";
         td.textContent=String(val);
 
