@@ -183,6 +183,31 @@ td[contenteditable]{
 background:rgba(37,99,235,0.03);
 }
 
+  .import-modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.65);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:999;
+}
+
+.import-modal.open{
+display:flex;
+}
+
+.import-box{
+background:var(--card);
+padding:20px;
+border-radius:16px;
+width:90%;
+max-width:700px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+  
 </style>
 </head>
 
@@ -369,7 +394,96 @@ await db.collection("abastecimentos").doc(id).update({
 
 },true);
 
+<!-- IMPORTAÇÃO EXCEL -->
+
+<div id="importModal" class="import-modal">
+
+<div class="import-box">
+
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<h3>Importar dados do Excel</h3>
+<button id="closeImportModal">✕</button>
+</div>
+
+<textarea id="importTextarea"
+placeholder="Cole aqui os dados copiados do Excel (Ctrl+V)..."
+style="width:100%;height:200px;border-radius:10px;border:1px solid var(--border);padding:10px;"></textarea>
+
+<div id="importResult"></div>
+
+<button id="confirmImport" class="primary">
+Importar
+</button>
+
+</div>
+
+</div>
+
+  /* IMPORTAR EXCEL */
+
+const importModal = document.getElementById("importModal");
+const btnImportExcel = document.getElementById("btnImportExcel");
+const closeImportModal = document.getElementById("closeImportModal");
+const confirmImport = document.getElementById("confirmImport");
+const importTextarea = document.getElementById("importTextarea");
+
+btnImportExcel.onclick = ()=>{
+importModal.classList.add("open");
+};
+
+closeImportModal.onclick = ()=>{
+importModal.classList.remove("open");
+importTextarea.value="";
+};
+
+confirmImport.onclick = async ()=>{
+
+const texto = importTextarea.value.trim();
+
+if(!texto){
+alert("Cole os dados do Excel primeiro.");
+return;
+}
+
+const linhas = texto.split("\n");
+
+let batch = db.batch();
+let count=0;
+
+linhas.forEach(l=>{
+
+const col = l.split("\t");
+
+if(col.length < 4) return;
+
+const ordem = col[0];
+const data = col[1];
+const placa = col[2];
+const litros = col[3];
+
+const ref = db.collection("abastecimentos").doc();
+
+batch.set(ref,{
+ordem,
+data,
+placa,
+litros
+});
+
+count++;
+
+});
+
+await batch.commit();
+
+alert(count+" abastecimento(s) importado(s)");
+
+importModal.classList.remove("open");
+importTextarea.value="";
+
+};
 </script>
 
+  
 </body>
 </html>
