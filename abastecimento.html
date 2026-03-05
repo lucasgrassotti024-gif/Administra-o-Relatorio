@@ -358,7 +358,63 @@ area.style.display="none"
 
 }
 
-document.getElementById("confirmImport").onclick=async()=>{
+document.getElementById("confirmImport").onclick = async () => {
+
+const texto = document.getElementById("excelPaste").value.trim()
+
+if (!texto) {
+alert("Cole os dados do Excel primeiro.")
+return
+}
+
+const linhas = texto.split(/\r?\n/)
+
+let batch = db.batch()
+let contador = 0
+
+for (let linha of linhas) {
+
+if (!linha.trim()) continue
+
+// separa por TAB (excel) ou vários espaços
+const colunas = linha.split(/\t| {2,}/)
+
+if (colunas.length < 4) {
+console.warn("Linha ignorada:", linha)
+continue
+}
+
+const ordem = colunas[0].trim()
+const data = colunas[1].trim()
+const placa = colunas[2].trim()
+const quant = colunas[3].trim()
+
+const ref = db.collection("abastecimento").doc()
+
+batch.set(ref, {
+ordem: ordem,
+data: data,
+placa: placa,
+quant: quant,
+criadoEm: new Date()
+})
+
+contador++
+
+}
+
+if (contador === 0) {
+alert("Nenhuma linha válida encontrada.")
+return
+}
+
+await batch.commit()
+
+alert(contador + " registros importados com sucesso.")
+
+document.getElementById("excelPaste").value = ""
+
+}
 
 const texto=document.getElementById("excelPaste").value.trim()
 
