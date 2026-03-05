@@ -18,20 +18,20 @@
 --text:#111827;
 --muted:#6b7280;
 --border:#e5e7eb;
---shadow:0 10px 30px rgba(0,0,0,0.12);
+--shadow:0 10px 30px rgba(0,0,0,0.1);
 }
 
 .dark{
 --bg:#020617;
 --card:#020617;
 --text:#e5e7eb;
---border:#1e293b;
 --muted:#9ca3af;
+--border:#1e293b;
 }
 
 *{
 box-sizing:border-box;
-font-family:"Inter";
+font-family:"Inter",sans-serif;
 }
 
 body{
@@ -39,23 +39,22 @@ margin:0;
 background:var(--bg);
 color:var(--text);
 display:flex;
-min-height:100vh;
 }
 
-/* SIDEBAR IGUAL */
+/* SIDEBAR */
 
 .sidebar{
 width:230px;
 background:var(--card);
-display:flex;
-flex-direction:column;
-padding:14px;
-gap:14px;
 position:fixed;
 top:0;
 bottom:0;
 left:0;
-box-shadow:0 18px 45px rgba(0,0,0,0.35);
+padding:14px;
+display:flex;
+flex-direction:column;
+gap:12px;
+box-shadow:var(--shadow);
 }
 
 .sidebar-title{
@@ -76,8 +75,8 @@ gap:8px;
 padding:8px;
 border-radius:10px;
 text-decoration:none;
-font-size:.85rem;
 color:var(--text);
+font-size:.85rem;
 }
 
 .sidebar-link:hover{
@@ -93,10 +92,10 @@ padding-top:8px;
 }
 
 .sidebar-toggle-theme{
-border:1px solid var(--border);
 border-radius:50%;
 width:32px;
 height:32px;
+border:1px solid var(--border);
 cursor:pointer;
 background:none;
 }
@@ -109,8 +108,6 @@ flex:1;
 padding:20px;
 }
 
-/* HEADER */
-
 .page-title{
 font-family:"Outfit";
 font-weight:800;
@@ -120,7 +117,7 @@ font-size:1.4rem;
 .page-sub{
 font-size:.8rem;
 color:var(--muted);
-margin-bottom:10px;
+margin-bottom:12px;
 }
 
 /* ACTIONS */
@@ -128,7 +125,7 @@ margin-bottom:10px;
 .table-actions{
 display:flex;
 gap:10px;
-margin-bottom:10px;
+margin-bottom:12px;
 flex-wrap:wrap;
 }
 
@@ -165,9 +162,8 @@ width:100%;
 
 th,td{
 border:1px solid var(--border);
-padding:6px 8px;
+padding:7px 8px;
 font-size:.85rem;
-white-space:nowrap;
 }
 
 th{
@@ -183,10 +179,12 @@ td[contenteditable]{
 background:rgba(37,99,235,0.03);
 }
 
-  .import-modal{
+/* IMPORT MODAL */
+
+.import-modal{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,0.65);
+background:rgba(0,0,0,0.6);
 display:none;
 align-items:center;
 justify-content:center;
@@ -199,15 +197,23 @@ display:flex;
 
 .import-box{
 background:var(--card);
-padding:20px;
 border-radius:16px;
+padding:18px;
 width:90%;
-max-width:700px;
+max-width:800px;
 display:flex;
 flex-direction:column;
 gap:10px;
 }
-  
+
+.import-box textarea{
+width:100%;
+height:200px;
+border-radius:12px;
+border:1px solid var(--border);
+padding:10px;
+}
+
 </style>
 </head>
 
@@ -224,16 +230,12 @@ gap:10px;
 
 <button id="themeToggle" class="sidebar-toggle-theme">🌙</button>
 
-<nav>
-
 <a href="admin.html" class="sidebar-link">📋 Admin</a>
 <a href="dashboard.html" class="sidebar-link">📊 Dashboard</a>
 <a href="planilha.html" class="sidebar-link">📑 Planilha</a>
 <a href="oleo-ibcs.html" class="sidebar-link">🛢️ Óleo em IBCs</a>
 <a href="abastecimento.html" class="sidebar-link">⛽ Abastecimento</a>
 <a href="excluidos.html" class="sidebar-link">🗑️ Excluídos</a>
-
-</nav>
 
 <div class="sidebar-footer">
 Controle de abastecimento
@@ -246,7 +248,7 @@ Controle de abastecimento
 <div class="main-wrapper">
 
 <div class="page-title">Controle de Abastecimento</div>
-<div class="page-sub" id="info">Carregando...</div>
+<div class="page-sub" id="subtitleInfo">Carregando dados...</div>
 
 <div class="table-actions">
 
@@ -254,7 +256,8 @@ Controle de abastecimento
 📥 Importar Excel
 </button>
 
-<input id="busca" placeholder="🔎 Buscar..."
+<input id="globalSearch"
+placeholder="🔎 Buscar..."
 style="padding:6px 12px;border-radius:999px;border:1px solid var(--border);">
 
 </div>
@@ -273,9 +276,28 @@ style="padding:6px 12px;border-radius:999px;border:1px solid var(--border);">
 </tr>
 </thead>
 
-<tbody id="tbody"></tbody>
+<tbody id="tableBody"></tbody>
 
 </table>
+
+</div>
+
+</div>
+
+<!-- IMPORT MODAL -->
+
+<div id="importModal" class="import-modal">
+
+<div class="import-box">
+
+<h3>Importar dados do Excel</h3>
+
+<textarea id="importTextarea"
+placeholder="Cole aqui os dados copiados do Excel (Ctrl+V)..."></textarea>
+
+<button id="analisarImport" class="primary">
+Importar
+</button>
 
 </div>
 
@@ -286,7 +308,7 @@ style="padding:6px 12px;border-radius:999px;border:1px solid var(--border);">
 
 <script>
 
-const firebaseConfig={
+const firebaseConfig = {
 apiKey:"AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
 authDomain:"relatorio-rss3-15896.firebaseapp.com",
 projectId:"relatorio-rss3-15896",
@@ -298,31 +320,31 @@ appId:"1:905086909082:web:7535afa8dddbd7b691fd23"
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-const tbody=document.getElementById("tbody");
-const info=document.getElementById("info");
+const tableBody=document.getElementById("tableBody");
+const subtitleInfo=document.getElementById("subtitleInfo");
 
 let dados=[];
 
 /* TEMA */
 
-const toggle=document.getElementById("themeToggle");
+const themeToggle=document.getElementById("themeToggle");
 
 if(localStorage.getItem("tema")==="dark"){
 document.body.classList.add("dark");
-toggle.textContent="☀️";
+themeToggle.textContent="☀️";
 }
 
-toggle.onclick=()=>{
+themeToggle.onclick=()=>{
 document.body.classList.toggle("dark");
 const dark=document.body.classList.contains("dark");
-toggle.textContent=dark?"☀️":"🌙";
+themeToggle.textContent=dark?"☀️":"🌙";
 localStorage.setItem("tema",dark?"dark":"light");
 };
 
-/* FIREBASE */
+/* FIREBASE REALTIME */
 
 db.collection("abastecimentos")
-.onSnapshot(snap=>{
+.onSnapshot((snap)=>{
 
 dados=[];
 
@@ -338,26 +360,21 @@ render();
 
 function render(){
 
-tbody.innerHTML="";
+tableBody.innerHTML="";
 
 dados.forEach(d=>{
 
 const tr=document.createElement("tr");
 
 tr.innerHTML=`
-
 <td contenteditable data="ordem">${d.ordem||""}</td>
 <td contenteditable data="data">${d.data||""}</td>
 <td contenteditable data="placa">${d.placa||""}</td>
 <td contenteditable data="litros">${d.litros||""}</td>
-
-<td>
-<button style="background:#dc2626;color:white;border:none;border-radius:6px;padding:4px 8px;">🗑</button>
-</td>
-
+<td><button class="delete">🗑</button></td>
 `;
 
-tr.querySelector("button").onclick=async()=>{
+tr.querySelector(".delete").onclick=async()=>{
 
 if(confirm("Excluir abastecimento?")){
 
@@ -367,23 +384,24 @@ await db.collection("abastecimentos").doc(d.id).delete();
 
 };
 
-tbody.appendChild(tr);
+tableBody.appendChild(tr);
 
 });
 
-info.textContent=dados.length+" registro(s)";
+subtitleInfo.textContent=dados.length+" registro(s)";
 
 }
 
 /* EDITAR */
 
-tbody.addEventListener("blur",async e=>{
+tableBody.addEventListener("blur",async(e)=>{
 
 const campo=e.target.getAttribute("data");
+
 if(!campo) return;
 
 const tr=e.target.closest("tr");
-const index=[...tbody.children].indexOf(tr);
+const index=[...tableBody.children].indexOf(tr);
 const id=dados[index].id;
 
 const valor=e.target.textContent.trim();
@@ -394,80 +412,62 @@ await db.collection("abastecimentos").doc(id).update({
 
 },true);
 
-<!-- IMPORTAÇÃO EXCEL -->
 
-<div id="importModal" class="import-modal">
+/* BUSCA */
 
-<div class="import-box">
+document.getElementById("globalSearch").addEventListener("input",(e)=>{
 
-<div style="display:flex;justify-content:space-between;align-items:center;">
-<h3>Importar dados do Excel</h3>
-<button id="closeImportModal">✕</button>
-</div>
+const termo=e.target.value.toLowerCase();
 
-<textarea id="importTextarea"
-placeholder="Cole aqui os dados copiados do Excel (Ctrl+V)..."
-style="width:100%;height:200px;border-radius:10px;border:1px solid var(--border);padding:10px;"></textarea>
+document.querySelectorAll("#tableBody tr").forEach(tr=>{
 
-<div id="importResult"></div>
+const texto=tr.innerText.toLowerCase();
 
-<button id="confirmImport" class="primary">
-Importar
-</button>
+tr.style.display=texto.includes(termo)?"":"none";
 
-</div>
+});
 
-</div>
+});
 
-  /* IMPORTAR EXCEL */
 
-const importModal = document.getElementById("importModal");
-const btnImportExcel = document.getElementById("btnImportExcel");
-const closeImportModal = document.getElementById("closeImportModal");
-const confirmImport = document.getElementById("confirmImport");
-const importTextarea = document.getElementById("importTextarea");
+/* IMPORTAÇÃO */
 
-btnImportExcel.onclick = ()=>{
+const importModal=document.getElementById("importModal");
+const btnImportExcel=document.getElementById("btnImportExcel");
+const importTextarea=document.getElementById("importTextarea");
+const analisarImport=document.getElementById("analisarImport");
+
+btnImportExcel.onclick=()=>{
 importModal.classList.add("open");
 };
 
-closeImportModal.onclick = ()=>{
-importModal.classList.remove("open");
-importTextarea.value="";
-};
+analisarImport.onclick=async()=>{
 
-confirmImport.onclick = async ()=>{
-
-const texto = importTextarea.value.trim();
+const texto=importTextarea.value.trim();
 
 if(!texto){
-alert("Cole os dados do Excel primeiro.");
+alert("Cole os dados do Excel.");
 return;
 }
 
-const linhas = texto.split("\n");
+const linhas=texto.split("\n");
 
-let batch = db.batch();
+let batch=db.batch();
 let count=0;
 
 linhas.forEach(l=>{
 
-const col = l.split("\t");
+const col=l.split("\t");
 
-if(col.length < 4) return;
+if(col.length<4) return;
 
-const ordem = col[0];
-const data = col[1];
-const placa = col[2];
-const litros = col[3];
-
-const ref = db.collection("abastecimentos").doc();
+const ref=db.collection("abastecimentos").doc();
 
 batch.set(ref,{
-ordem,
-data,
-placa,
-litros
+ordem:col[0],
+data:col[1],
+placa:col[2],
+litros:col[3]
 });
 
 count++;
@@ -478,12 +478,12 @@ await batch.commit();
 
 alert(count+" abastecimento(s) importado(s)");
 
-importModal.classList.remove("open");
 importTextarea.value="";
+importModal.classList.remove("open");
 
 };
+
 </script>
 
-  
 </body>
 </html>
