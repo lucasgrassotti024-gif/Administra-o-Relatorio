@@ -171,6 +171,40 @@ height:150px;
 margin-top:10px;
 }
 
+/* MODAL */
+
+.import-modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.65);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:999;
+}
+
+.import-modal.open{
+display:flex;
+}
+
+.import-box{
+width:90%;
+max-width:700px;
+background:var(--card);
+border-radius:16px;
+padding:20px;
+}
+
+.import-box textarea{
+width:100%;
+height:180px;
+border-radius:10px;
+border:1px solid var(--border);
+padding:10px;
+background:var(--bg);
+color:var(--text);
+}
+
 </style>
 </head>
 
@@ -219,15 +253,29 @@ margin-top:10px;
 
 </table>
 
-<div id="importArea" style="display:none">
+</div>
 
-<h3>Colar dados do Excel</h3>
+<!-- MODAL IMPORTAÇÃO -->
+
+<div id="importModal" class="import-modal">
+
+<div class="import-box">
+
+<div style="display:flex;justify-content:space-between;align-items:center">
+
+<h3>Importar dados do Excel</h3>
+
+<button id="closeImportModal" class="btn-danger">✕</button>
+
+</div>
 
 <textarea id="excelPaste"></textarea>
 
 <br><br>
 
-<button id="confirmImport" class="btn-primary">Importar</button>
+<button id="confirmImport" class="btn-primary">
+Importar
+</button>
 
 </div>
 
@@ -337,9 +385,73 @@ await db.collection("abastecimento")
 
 },true)
 
-/* IMPORTAR EXCEL */
+/* IMPORTAÇÃO */
 
-document.getElementById
+const importModal=document.getElementById("importModal")
+const btnImport=document.getElementById("btnImport")
+const closeImportModal=document.getElementById("closeImportModal")
+const confirmImport=document.getElementById("confirmImport")
+const excelPaste=document.getElementById("excelPaste")
+
+btnImport.onclick=()=>{
+
+importModal.classList.add("open")
+excelPaste.value=""
+excelPaste.focus()
+
+}
+
+closeImportModal.onclick=()=>{
+
+importModal.classList.remove("open")
+
+}
+
+confirmImport.onclick=async()=>{
+
+const texto=excelPaste.value.trim()
+
+if(!texto){
+alert("Cole os dados do Excel primeiro.")
+return
+}
+
+const linhas=texto.split("\n")
+
+let batch=db.batch()
+let count=0
+
+linhas.forEach(l=>{
+
+const c=l.split("\t")
+
+if(c.length<4)return
+
+const ref=db.collection("abastecimento").doc()
+
+batch.set(ref,{
+ordem:c[0],
+data:c[1],
+placa:c[2],
+quant:c[3]
+})
+
+count++
+
+})
+
+if(count===0){
+alert("Nenhuma linha válida encontrada.")
+return
+}
+
+await batch.commit()
+
+alert(count+" registros importados")
+
+importModal.classList.remove("open")
+
+}
 
 /* EXCLUIR SELECIONADAS */
 
