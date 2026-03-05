@@ -9,8 +9,6 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 
 :root{
@@ -112,6 +110,8 @@ color:white;
 cursor:pointer;
 }
 
+/* MAIN */
+
 .main{
 flex:1;
 padding:30px;
@@ -142,6 +142,8 @@ tr.selected{
 background:rgba(37,99,235,0.25);
 }
 
+/* BOTÕES */
+
 button{
 padding:6px 10px;
 border:none;
@@ -159,58 +161,21 @@ background:#2563eb;
 color:white;
 }
 
+/* IMPORTAR */
+
 textarea{
 width:100%;
 height:150px;
 margin-top:10px;
 }
 
-/* DASHBOARD */
-
-.dashboard{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:20px;
-margin-bottom:30px;
-}
-
-.chart-box{
+#importArea{
+display:none;
 background:var(--card);
-padding:15px;
+padding:20px;
 border-radius:12px;
 border:1px solid var(--border);
-}
-
-.import-modal{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,0.65);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:999;
-}
-
-.import-modal.open{
-display:flex;
-}
-
-.import-box{
-width:90%;
-max-width:700px;
-background:var(--card);
-border-radius:16px;
-padding:20px;
-}
-
-.import-box textarea{
-width:100%;
-height:180px;
-border-radius:10px;
-border:1px solid var(--border);
-padding:10px;
-background:var(--bg);
-color:var(--text);
+margin-top:20px;
 }
 
 </style>
@@ -245,27 +210,6 @@ color:var(--text);
 
 <br><br>
 
-<!-- DASHBOARD -->
-
-<div class="dashboard">
-
-<div class="chart-box">
-<h3>Litros por Caminhão</h3>
-<canvas id="chartCaminhao"></canvas>
-</div>
-
-<div class="chart-box">
-<h3>Consumo Mensal</h3>
-<canvas id="chartMes"></canvas>
-</div>
-
-<div class="chart-box">
-<h3>Uso da Frota</h3>
-<canvas id="chartUso"></canvas>
-</div>
-
-</div>
-
 <table>
 
 <thead>
@@ -282,24 +226,15 @@ color:var(--text);
 
 </table>
 
-</div>
+<div id="importArea">
 
-<div id="importModal" class="import-modal">
-
-<div class="import-box">
-
-<div style="display:flex;justify-content:space-between;align-items:center">
-<h3>Importar dados do Excel</h3>
-<button id="closeImportModal" class="btn-danger">✕</button>
-</div>
+<h3>Colar dados do Excel</h3>
 
 <textarea id="excelPaste"></textarea>
 
 <br><br>
 
-<button id="confirmImport" class="btn-primary">
-Importar
-</button>
+<button id="confirmImport" class="btn-primary">Importar</button>
 
 </div>
 
@@ -324,80 +259,6 @@ const tbody=document.getElementById("tbody")
 
 let dados=[]
 let selecionados=new Set()
-
-let chartCaminhao
-let chartMes
-let chartUso
-
-function atualizarDashboard(){
-
-const porPlaca={}
-const porMes={}
-const uso={}
-
-dados.forEach(r=>{
-
-const placa=r.placa||"Sem placa"
-const qtd=parseFloat(r.quant)||0
-
-porPlaca[placa]=(porPlaca[placa]||0)+qtd
-
-uso[placa]=(uso[placa]||0)+1
-
-if(r.data){
-
-let partes=r.data.split("/")
-
-if(partes.length===3){
-
-let mes=partes[1]+"/"+partes[2]
-
-porMes[mes]=(porMes[mes]||0)+qtd
-
-}
-
-}
-
-})
-
-const placas=Object.keys(porPlaca)
-const litros=Object.values(porPlaca)
-
-const meses=Object.keys(porMes)
-const consumo=Object.values(porMes)
-
-const usoPlacas=Object.keys(uso)
-const usoQtd=Object.values(uso)
-
-if(chartCaminhao)chartCaminhao.destroy()
-if(chartMes)chartMes.destroy()
-if(chartUso)chartUso.destroy()
-
-chartCaminhao=new Chart(document.getElementById("chartCaminhao"),{
-type:"bar",
-data:{
-labels:placas,
-datasets:[{label:"Litros",data:litros}]
-}
-})
-
-chartMes=new Chart(document.getElementById("chartMes"),{
-type:"line",
-data:{
-labels:meses,
-datasets:[{label:"Consumo",data:consumo}]
-}
-})
-
-chartUso=new Chart(document.getElementById("chartUso"),{
-type:"bar",
-data:{
-labels:usoPlacas,
-datasets:[{label:"Abastecimentos",data:usoQtd}]
-}
-})
-
-}
 
 function render(){
 
@@ -453,8 +314,6 @@ tbody.appendChild(tr)
 
 })
 
-atualizarDashboard()
-
 }
 
 db.collection("abastecimento")
@@ -485,41 +344,27 @@ await db.collection("abastecimento")
 
 },true)
 
-/* IMPORTAÇÃO */
+/* IMPORTAR */
 
-const importModal=document.getElementById("importModal")
-const btnImport=document.getElementById("btnImport")
-const closeImportModal=document.getElementById("closeImportModal")
-const confirmImport=document.getElementById("confirmImport")
-const excelPaste=document.getElementById("excelPaste")
+document.getElementById("btnImport").onclick=()=>{
 
-btnImport.onclick=()=>{
+const area=document.getElementById("importArea")
 
-importModal.classList.add("open")
-excelPaste.value=""
-excelPaste.focus()
+if(area.style.display==="none"){
+area.style.display="block"
+}else{
+area.style.display="none"
+}
 
 }
 
-closeImportModal.onclick=()=>{
+document.getElementById("confirmImport").onclick=async()=>{
 
-importModal.classList.remove("open")
-
-}
-
-confirmImport.onclick=async()=>{
-
-const texto=excelPaste.value.trim()
-
-if(!texto){
-alert("Cole os dados do Excel primeiro.")
-return
-}
+const texto=document.getElementById("excelPaste").value.trim()
 
 const linhas=texto.split("\n")
 
 let batch=db.batch()
-let count=0
 
 linhas.forEach(l=>{
 
@@ -536,20 +381,11 @@ placa:c[2],
 quant:c[3]
 })
 
-count++
-
 })
-
-if(count===0){
-alert("Nenhuma linha válida encontrada.")
-return
-}
 
 await batch.commit()
 
-alert(count+" registros importados")
-
-importModal.classList.remove("open")
+alert("Importado!")
 
 }
 
