@@ -12,12 +12,13 @@
 
 :root{
 --primary:#2563eb;
+--accent:#1d4ed8;
 --bg:#f3f6fb;
 --card:#ffffff;
 --text:#111827;
---border:#e5e7eb;
 --muted:#6b7280;
---shadow:0 10px 25px rgba(0,0,0,0.08);
+--border:#e5e7eb;
+--shadow:0 10px 30px rgba(0,0,0,0.12);
 }
 
 .dark{
@@ -25,6 +26,7 @@
 --card:#020617;
 --text:#e5e7eb;
 --border:#1e293b;
+--muted:#9ca3af;
 }
 
 *{
@@ -37,22 +39,23 @@ margin:0;
 background:var(--bg);
 color:var(--text);
 display:flex;
+min-height:100vh;
 }
 
-/* SIDEBAR */
+/* SIDEBAR IGUAL */
 
 .sidebar{
 width:230px;
 background:var(--card);
+display:flex;
+flex-direction:column;
+padding:14px;
+gap:14px;
 position:fixed;
 top:0;
 bottom:0;
 left:0;
-padding:14px;
-display:flex;
-flex-direction:column;
-gap:12px;
-box-shadow:0 18px 45px rgba(0,0,0,0.25);
+box-shadow:0 18px 45px rgba(0,0,0,0.35);
 }
 
 .sidebar-title{
@@ -62,7 +65,7 @@ font-size:1rem;
 }
 
 .sidebar-sub{
-font-size:.75rem;
+font-size:.72rem;
 color:var(--muted);
 }
 
@@ -71,25 +74,36 @@ display:flex;
 align-items:center;
 gap:8px;
 padding:8px;
-border-radius:8px;
+border-radius:10px;
 text-decoration:none;
-color:var(--text);
 font-size:.85rem;
+color:var(--text);
 }
 
 .sidebar-link:hover{
-background:rgba(37,99,235,0.1);
+background:rgba(37,99,235,0.15);
 }
 
 .sidebar-footer{
 margin-top:auto;
 font-size:.7rem;
 color:var(--muted);
+border-top:1px solid var(--border);
+padding-top:8px;
+}
+
+.sidebar-toggle-theme{
+border:1px solid var(--border);
+border-radius:50%;
+width:32px;
+height:32px;
+cursor:pointer;
+background:none;
 }
 
 /* MAIN */
 
-.main{
+.main-wrapper{
 margin-left:230px;
 flex:1;
 padding:20px;
@@ -106,16 +120,16 @@ font-size:1.4rem;
 .page-sub{
 font-size:.8rem;
 color:var(--muted);
-margin-bottom:15px;
+margin-bottom:10px;
 }
 
 /* ACTIONS */
 
-.actions{
+.table-actions{
 display:flex;
 gap:10px;
-flex-wrap:wrap;
 margin-bottom:10px;
+flex-wrap:wrap;
 }
 
 button{
@@ -123,12 +137,12 @@ padding:6px 12px;
 border-radius:999px;
 border:1px solid var(--border);
 background:var(--card);
-cursor:pointer;
 font-size:.8rem;
+cursor:pointer;
 }
 
 button.primary{
-background:#2563eb;
+background:linear-gradient(135deg,#2563eb,#1d4ed8);
 color:white;
 border:none;
 }
@@ -137,22 +151,23 @@ border:none;
 
 .table-wrapper{
 background:var(--card);
-border-radius:14px;
+border-radius:16px;
 border:1px solid var(--border);
 box-shadow:var(--shadow);
 overflow:auto;
 }
 
 table{
-width:100%;
 border-collapse:collapse;
-min-width:600px;
+min-width:700px;
+width:100%;
 }
 
 th,td{
 border:1px solid var(--border);
-padding:7px 8px;
+padding:6px 8px;
 font-size:.85rem;
+white-space:nowrap;
 }
 
 th{
@@ -165,11 +180,7 @@ background:rgba(0,0,0,0.02);
 }
 
 td[contenteditable]{
-background:rgba(37,99,235,0.04);
-}
-
-.selected{
-background:rgba(37,99,235,0.25) !important;
+background:rgba(37,99,235,0.03);
 }
 
 </style>
@@ -186,43 +197,46 @@ background:rgba(37,99,235,0.25) !important;
 <div class="sidebar-sub">CMPC • RSS3</div>
 </div>
 
+<button id="themeToggle" class="sidebar-toggle-theme">🌙</button>
+
+<nav>
+
 <a href="admin.html" class="sidebar-link">📋 Admin</a>
 <a href="dashboard.html" class="sidebar-link">📊 Dashboard</a>
 <a href="planilha.html" class="sidebar-link">📑 Planilha</a>
-<a href="oleo-ibcs.html" class="sidebar-link">🛢️ Óleo IBC</a>
+<a href="oleo-ibcs.html" class="sidebar-link">🛢️ Óleo em IBCs</a>
 <a href="abastecimento.html" class="sidebar-link">⛽ Abastecimento</a>
 <a href="excluidos.html" class="sidebar-link">🗑️ Excluídos</a>
 
-<button id="themeToggle">🌙 Tema</button>
+</nav>
 
 <div class="sidebar-footer">
-Controle de abastecimentos
+Controle de abastecimento
 </div>
 
 </aside>
 
 <!-- MAIN -->
 
-<div class="main">
+<div class="main-wrapper">
 
 <div class="page-title">Controle de Abastecimento</div>
 <div class="page-sub" id="info">Carregando...</div>
 
-<div class="actions">
+<div class="table-actions">
 
-<button id="btnExcluirSelecionadas" style="background:#b91c1c;color:white;border:none;">🗑 Excluir Selecionadas</button>
+<button class="primary" id="btnImportExcel">
+📥 Importar Excel
+</button>
 
-<button id="btnExcluirTodos" style="background:#dc2626;color:white;border:none;">🗑 Excluir TODOS</button>
-
-<button id="exportCsv" class="primary">Exportar CSV</button>
-
-<input id="busca" placeholder="🔎 Buscar..." style="padding:6px;border-radius:999px;border:1px solid var(--border);">
+<input id="busca" placeholder="🔎 Buscar..."
+style="padding:6px 12px;border-radius:999px;border:1px solid var(--border);">
 
 </div>
 
 <div class="table-wrapper">
 
-<table id="tabela">
+<table>
 
 <thead>
 <tr>
@@ -234,7 +248,7 @@ Controle de abastecimentos
 </tr>
 </thead>
 
-<tbody></tbody>
+<tbody id="tbody"></tbody>
 
 </table>
 
@@ -242,45 +256,45 @@ Controle de abastecimentos
 
 </div>
 
-
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
 
-const firebaseConfig = {
-apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
-authDomain: "relatorio-rss3-15896.firebaseapp.com",
-projectId: "relatorio-rss3-15896",
-storageBucket: "relatorio-rss3-15896.firebasestorage.app",
-messagingSenderId: "905086909082",
-appId: "1:905086909082:web:7535afa8dddbd7b691fd23"
+const firebaseConfig={
+apiKey:"AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
+authDomain:"relatorio-rss3-15896.firebaseapp.com",
+projectId:"relatorio-rss3-15896",
+storageBucket:"relatorio-rss3-15896.firebasestorage.app",
+messagingSenderId:"905086909082",
+appId:"1:905086909082:web:7535afa8dddbd7b691fd23"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-const tbody = document.querySelector("#tabela tbody");
-const info = document.getElementById("info");
+const tbody=document.getElementById("tbody");
+const info=document.getElementById("info");
 
 let dados=[];
-let selecionados=new Set();
 
-/* DARK MODE */
+/* TEMA */
 
 const toggle=document.getElementById("themeToggle");
 
 if(localStorage.getItem("tema")==="dark"){
 document.body.classList.add("dark");
+toggle.textContent="☀️";
 }
 
 toggle.onclick=()=>{
 document.body.classList.toggle("dark");
-localStorage.setItem("tema",
-document.body.classList.contains("dark")?"dark":"light");
+const dark=document.body.classList.contains("dark");
+toggle.textContent=dark?"☀️":"🌙";
+localStorage.setItem("tema",dark?"dark":"light");
 };
 
-/* CARREGAR */
+/* FIREBASE */
 
 db.collection("abastecimentos")
 .onSnapshot(snap=>{
@@ -295,7 +309,6 @@ render();
 
 });
 
-
 /* RENDER */
 
 function render(){
@@ -305,46 +318,49 @@ tbody.innerHTML="";
 dados.forEach(d=>{
 
 const tr=document.createElement("tr");
-tr.dataset.id=d.id;
 
 tr.innerHTML=`
 
-<td contenteditable data-field="ordem">${d.ordem||""}</td>
-<td contenteditable data-field="data">${d.data||""}</td>
-<td contenteditable data-field="placa">${d.placa||""}</td>
-<td contenteditable data-field="litros">${d.litros||""}</td>
+<td contenteditable data="ordem">${d.ordem||""}</td>
+<td contenteditable data="data">${d.data||""}</td>
+<td contenteditable data="placa">${d.placa||""}</td>
+<td contenteditable data="litros">${d.litros||""}</td>
 
 <td>
-<button style="background:#dc2626;color:white;border:none;border-radius:6px;padding:3px 8px;">🗑</button>
+<button style="background:#dc2626;color:white;border:none;border-radius:6px;padding:4px 8px;">🗑</button>
 </td>
 
 `;
 
 tr.querySelector("button").onclick=async()=>{
-if(confirm("Excluir registro?")){
+
+if(confirm("Excluir abastecimento?")){
+
 await db.collection("abastecimentos").doc(d.id).delete();
+
 }
+
 };
 
 tbody.appendChild(tr);
 
 });
 
-info.innerText=`${dados.length} registro(s)`;
+info.textContent=dados.length+" registro(s)";
 
 }
 
-
 /* EDITAR */
 
-tbody.addEventListener("blur", async e=>{
+tbody.addEventListener("blur",async e=>{
 
-if(!e.target.dataset.field) return;
+const campo=e.target.getAttribute("data");
+if(!campo) return;
 
 const tr=e.target.closest("tr");
-const id=tr.dataset.id;
+const index=[...tbody.children].indexOf(tr);
+const id=dados[index].id;
 
-const campo=e.target.dataset.field;
 const valor=e.target.textContent.trim();
 
 await db.collection("abastecimentos").doc(id).update({
@@ -352,47 +368,6 @@ await db.collection("abastecimentos").doc(id).update({
 });
 
 },true);
-
-
-/* EXPORT CSV */
-
-document.getElementById("exportCsv").onclick=()=>{
-
-let csv="Ordem;Data;Placa;Litros\n";
-
-dados.forEach(d=>{
-csv+=`${d.ordem};${d.data};${d.placa};${d.litros}\n`;
-});
-
-const blob=new Blob([csv],{type:"text/csv"});
-const a=document.createElement("a");
-
-a.href=URL.createObjectURL(blob);
-a.download="abastecimentos.csv";
-a.click();
-
-};
-
-
-/* EXCLUIR TODOS */
-
-document.getElementById("btnExcluirTodos").onclick=async()=>{
-
-if(!confirm("Excluir TODOS abastecimentos?")) return;
-
-const snap=await db.collection("abastecimentos").get();
-
-let batch=db.batch();
-
-snap.forEach(doc=>{
-batch.delete(doc.ref);
-});
-
-await batch.commit();
-
-alert("Todos excluídos");
-
-};
 
 </script>
 
