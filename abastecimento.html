@@ -339,40 +339,7 @@ await db.collection("abastecimento")
 
 /* IMPORTAR EXCEL */
 
-document.getElementById("btnImport").onclick=()=>{
-document.getElementById("importArea").style.display="block"
-}
-
-document.getElementById("confirmImport").onclick=async()=>{
-
-const texto=document.getElementById("excelPaste").value.trim()
-
-const linhas=texto.split("\n")
-
-let batch=db.batch()
-
-linhas.forEach(l=>{
-
-const c=l.split("\t")
-
-if(c.length<4)return
-
-const ref=db.collection("abastecimento").doc()
-
-batch.set(ref,{
-ordem:c[0],
-data:c[1],
-placa:c[2],
-quant:c[3]
-})
-
-})
-
-await batch.commit()
-
-alert("Importado!")
-
-}
+document.getElementById
 
 /* EXCLUIR SELECIONADAS */
 
