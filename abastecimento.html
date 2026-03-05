@@ -1,1 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
+<title>Abastecimento — Relatórios de Campo</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+--primary:#2563eb;
+--bg:#f3f6fb;
+--card:#ffffff;
+--text:#111827;
+--border:#e5e7eb;
+--muted:#6b7280;
+--shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+.dark{
+--bg:#020617;
+--card:#020617;
+--text:#e5e7eb;
+--border:#1e293b;
+}
+
+*{
+box-sizing:border-box;
+font-family:"Inter";
+}
+
+body{
+margin:0;
+background:var(--bg);
+color:var(--text);
+display:flex;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:230px;
+background:var(--card);
+position:fixed;
+top:0;
+bottom:0;
+left:0;
+padding:14px;
+display:flex;
+flex-direction:column;
+gap:12px;
+box-shadow:0 18px 45px rgba(0,0,0,0.25);
+}
+
+.sidebar-title{
+font-family:"Outfit";
+font-weight:800;
+font-size:1rem;
+}
+
+.sidebar-sub{
+font-size:.75rem;
+color:var(--muted);
+}
+
+.sidebar-link{
+display:flex;
+align-items:center;
+gap:8px;
+padding:8px;
+border-radius:8px;
+text-decoration:none;
+color:var(--text);
+font-size:.85rem;
+}
+
+.sidebar-link:hover{
+background:rgba(37,99,235,0.1);
+}
+
+.sidebar-footer{
+margin-top:auto;
+font-size:.7rem;
+color:var(--muted);
+}
+
+/* MAIN */
+
+.main{
+margin-left:230px;
+flex:1;
+padding:20px;
+}
+
+/* HEADER */
+
+.page-title{
+font-family:"Outfit";
+font-weight:800;
+font-size:1.4rem;
+}
+
+.page-sub{
+font-size:.8rem;
+color:var(--muted);
+margin-bottom:15px;
+}
+
+/* ACTIONS */
+
+.actions{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:10px;
+}
+
+button{
+padding:6px 12px;
+border-radius:999px;
+border:1px solid var(--border);
+background:var(--card);
+cursor:pointer;
+font-size:.8rem;
+}
+
+button.primary{
+background:#2563eb;
+color:white;
+border:none;
+}
+
+/* TABLE */
+
+.table-wrapper{
+background:var(--card);
+border-radius:14px;
+border:1px solid var(--border);
+box-shadow:var(--shadow);
+overflow:auto;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+min-width:600px;
+}
+
+th,td{
+border:1px solid var(--border);
+padding:7px 8px;
+font-size:.85rem;
+}
+
+th{
+background:rgba(37,99,235,0.05);
+font-weight:700;
+}
+
+tbody tr:nth-child(even){
+background:rgba(0,0,0,0.02);
+}
+
+td[contenteditable]{
+background:rgba(37,99,235,0.04);
+}
+
+.selected{
+background:rgba(37,99,235,0.25) !important;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+<div>
+<div class="sidebar-title">Relatórios de Campo</div>
+<div class="sidebar-sub">CMPC • RSS3</div>
+</div>
+
+<a href="admin.html" class="sidebar-link">📋 Admin</a>
+<a href="dashboard.html" class="sidebar-link">📊 Dashboard</a>
+<a href="planilha.html" class="sidebar-link">📑 Planilha</a>
+<a href="oleo-ibcs.html" class="sidebar-link">🛢️ Óleo IBC</a>
+<a href="abastecimento.html" class="sidebar-link">⛽ Abastecimento</a>
+<a href="excluidos.html" class="sidebar-link">🗑️ Excluídos</a>
+
+<button id="themeToggle">🌙 Tema</button>
+
+<div class="sidebar-footer">
+Controle de abastecimentos
+</div>
+
+</aside>
+
+<!-- MAIN -->
+
+<div class="main">
+
+<div class="page-title">Controle de Abastecimento</div>
+<div class="page-sub" id="info">Carregando...</div>
+
+<div class="actions">
+
+<button id="btnExcluirSelecionadas" style="background:#b91c1c;color:white;border:none;">🗑 Excluir Selecionadas</button>
+
+<button id="btnExcluirTodos" style="background:#dc2626;color:white;border:none;">🗑 Excluir TODOS</button>
+
+<button id="exportCsv" class="primary">Exportar CSV</button>
+
+<input id="busca" placeholder="🔎 Buscar..." style="padding:6px;border-radius:999px;border:1px solid var(--border);">
+
+</div>
+
+<div class="table-wrapper">
+
+<table id="tabela">
+
+<thead>
+<tr>
+<th>Ordem</th>
+<th>Data</th>
+<th>Placa</th>
+<th>Abastecimento (L)</th>
+<th>Excluir</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+
+const firebaseConfig = {
+apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
+authDomain: "relatorio-rss3-15896.firebaseapp.com",
+projectId: "relatorio-rss3-15896",
+storageBucket: "relatorio-rss3-15896.firebasestorage.app",
+messagingSenderId: "905086909082",
+appId: "1:905086909082:web:7535afa8dddbd7b691fd23"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const tbody = document.querySelector("#tabela tbody");
+const info = document.getElementById("info");
+
+let dados=[];
+let selecionados=new Set();
+
+/* DARK MODE */
+
+const toggle=document.getElementById("themeToggle");
+
+if(localStorage.getItem("tema")==="dark"){
+document.body.classList.add("dark");
+}
+
+toggle.onclick=()=>{
+document.body.classList.toggle("dark");
+localStorage.setItem("tema",
+document.body.classList.contains("dark")?"dark":"light");
+};
+
+/* CARREGAR */
+
+db.collection("abastecimentos")
+.onSnapshot(snap=>{
+
+dados=[];
+
+snap.forEach(doc=>{
+dados.push({id:doc.id,...doc.data()});
+});
+
+render();
+
+});
+
+
+/* RENDER */
+
+function render(){
+
+tbody.innerHTML="";
+
+dados.forEach(d=>{
+
+const tr=document.createElement("tr");
+tr.dataset.id=d.id;
+
+tr.innerHTML=`
+
+<td contenteditable data-field="ordem">${d.ordem||""}</td>
+<td contenteditable data-field="data">${d.data||""}</td>
+<td contenteditable data-field="placa">${d.placa||""}</td>
+<td contenteditable data-field="litros">${d.litros||""}</td>
+
+<td>
+<button style="background:#dc2626;color:white;border:none;border-radius:6px;padding:3px 8px;">🗑</button>
+</td>
+
+`;
+
+tr.querySelector("button").onclick=async()=>{
+if(confirm("Excluir registro?")){
+await db.collection("abastecimentos").doc(d.id).delete();
+}
+};
+
+tbody.appendChild(tr);
+
+});
+
+info.innerText=`${dados.length} registro(s)`;
+
+}
+
+
+/* EDITAR */
+
+tbody.addEventListener("blur", async e=>{
+
+if(!e.target.dataset.field) return;
+
+const tr=e.target.closest("tr");
+const id=tr.dataset.id;
+
+const campo=e.target.dataset.field;
+const valor=e.target.textContent.trim();
+
+await db.collection("abastecimentos").doc(id).update({
+[campo]:valor
+});
+
+},true);
+
+
+/* EXPORT CSV */
+
+document.getElementById("exportCsv").onclick=()=>{
+
+let csv="Ordem;Data;Placa;Litros\n";
+
+dados.forEach(d=>{
+csv+=`${d.ordem};${d.data};${d.placa};${d.litros}\n`;
+});
+
+const blob=new Blob([csv],{type:"text/csv"});
+const a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+a.download="abastecimentos.csv";
+a.click();
+
+};
+
+
+/* EXCLUIR TODOS */
+
+document.getElementById("btnExcluirTodos").onclick=async()=>{
+
+if(!confirm("Excluir TODOS abastecimentos?")) return;
+
+const snap=await db.collection("abastecimentos").get();
+
+let batch=db.batch();
+
+snap.forEach(doc=>{
+batch.delete(doc.ref);
+});
+
+await batch.commit();
+
+alert("Todos excluídos");
+
+};
+
+</script>
+
+</body>
+</html>
