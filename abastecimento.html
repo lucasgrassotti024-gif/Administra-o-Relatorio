@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <title>Abastecimento — Relatórios de Campo</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
@@ -18,7 +17,7 @@
 --text:#111827;
 --muted:#6b7280;
 --border:#e5e7eb;
---shadow:0 10px 30px rgba(0,0,0,0.1);
+--shadow:0 10px 30px rgba(0,0,0,0.12);
 }
 
 .dark{
@@ -31,7 +30,7 @@
 
 *{
 box-sizing:border-box;
-font-family:"Inter",sans-serif;
+font-family:"Inter";
 }
 
 body{
@@ -39,6 +38,7 @@ margin:0;
 background:var(--bg);
 color:var(--text);
 display:flex;
+min-height:100vh;
 }
 
 /* SIDEBAR */
@@ -92,12 +92,12 @@ padding-top:8px;
 }
 
 .sidebar-toggle-theme{
-border-radius:50%;
 width:32px;
 height:32px;
+border-radius:50%;
 border:1px solid var(--border);
-cursor:pointer;
 background:none;
+cursor:pointer;
 }
 
 /* MAIN */
@@ -117,7 +117,7 @@ font-size:1.4rem;
 .page-sub{
 font-size:.8rem;
 color:var(--muted);
-margin-bottom:12px;
+margin-bottom:10px;
 }
 
 /* ACTIONS */
@@ -125,8 +125,8 @@ margin-bottom:12px;
 .table-actions{
 display:flex;
 gap:10px;
-margin-bottom:12px;
 flex-wrap:wrap;
+margin-bottom:10px;
 }
 
 button{
@@ -156,8 +156,8 @@ overflow:auto;
 
 table{
 border-collapse:collapse;
-min-width:700px;
 width:100%;
+min-width:600px;
 }
 
 th,td{
@@ -198,7 +198,7 @@ display:flex;
 .import-box{
 background:var(--card);
 border-radius:16px;
-padding:18px;
+padding:20px;
 width:90%;
 max-width:800px;
 display:flex;
@@ -284,7 +284,7 @@ style="padding:6px 12px;border-radius:999px;border:1px solid var(--border);">
 
 </div>
 
-<!-- IMPORT MODAL -->
+<!-- IMPORTAÇÃO -->
 
 <div id="importModal" class="import-modal">
 
@@ -295,9 +295,7 @@ style="padding:6px 12px;border-radius:999px;border:1px solid var(--border);">
 <textarea id="importTextarea"
 placeholder="Cole aqui os dados copiados do Excel (Ctrl+V)..."></textarea>
 
-<button id="analisarImport" class="primary">
-Importar
-</button>
+<button id="confirmImport" class="primary">Importar</button>
 
 </div>
 
@@ -308,7 +306,7 @@ Importar
 
 <script>
 
-const firebaseConfig = {
+const firebaseConfig={
 apiKey:"AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
 authDomain:"relatorio-rss3-15896.firebaseapp.com",
 projectId:"relatorio-rss3-15896",
@@ -343,8 +341,7 @@ localStorage.setItem("tema",dark?"dark":"light");
 
 /* FIREBASE REALTIME */
 
-db.collection("abastecimentos")
-.onSnapshot((snap)=>{
+db.collection("abastecimentos").onSnapshot((snap)=>{
 
 dados=[];
 
@@ -375,13 +372,9 @@ tr.innerHTML=`
 `;
 
 tr.querySelector(".delete").onclick=async()=>{
-
 if(confirm("Excluir abastecimento?")){
-
 await db.collection("abastecimentos").doc(d.id).delete();
-
 }
-
 };
 
 tableBody.appendChild(tr);
@@ -397,7 +390,6 @@ subtitleInfo.textContent=dados.length+" registro(s)";
 tableBody.addEventListener("blur",async(e)=>{
 
 const campo=e.target.getAttribute("data");
-
 if(!campo) return;
 
 const tr=e.target.closest("tr");
@@ -411,7 +403,6 @@ await db.collection("abastecimentos").doc(id).update({
 });
 
 },true);
-
 
 /* BUSCA */
 
@@ -429,19 +420,18 @@ tr.style.display=texto.includes(termo)?"":"none";
 
 });
 
-
 /* IMPORTAÇÃO */
 
 const importModal=document.getElementById("importModal");
 const btnImportExcel=document.getElementById("btnImportExcel");
+const confirmImport=document.getElementById("confirmImport");
 const importTextarea=document.getElementById("importTextarea");
-const analisarImport=document.getElementById("analisarImport");
 
 btnImportExcel.onclick=()=>{
 importModal.classList.add("open");
 };
 
-analisarImport.onclick=async()=>{
+confirmImport.onclick=async()=>{
 
 const texto=importTextarea.value.trim();
 
@@ -457,7 +447,7 @@ let count=0;
 
 linhas.forEach(l=>{
 
-const col=l.split("\t");
+const col=l.trim().split(/\s+/); // aceita TAB ou espaço
 
 if(col.length<4) return;
 
