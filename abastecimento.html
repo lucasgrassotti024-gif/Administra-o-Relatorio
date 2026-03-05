@@ -368,9 +368,9 @@ let batch=db.batch()
 
 linhas.forEach(l=>{
 
-const c=l.split("\t")
+const c=l.trim().split(/\s+/)
 
-if(c.length<4)return
+if(c.length < 4) return
 
 const ref=db.collection("abastecimento").doc()
 
