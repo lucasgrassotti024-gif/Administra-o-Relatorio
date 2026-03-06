@@ -928,8 +928,9 @@ sheetBody.addEventListener("blur",async (e)=>{
     td.textContent = formatMinutesAsHhMm(mins);
   }
   try{
-    const updatePayload = buildUpdatePayload(colKey,newValue);
-    await db.collection("abastecimentos").doc(id).update(updatePayload);
+   await db.collection("abastecimentos").doc(id).update({
+  [colKey]: newValue
+});
     const obj=relatoriosRaw.find(r=>r.id===id);
     if(obj) obj[colKey]=newValue;
     aplicarFiltrosEAtualizar();
@@ -1075,12 +1076,12 @@ analisarImportBtn.addEventListener("click", async () => {
 
   if(col.length === 4){
 
-    validos.push({
-      ordem: col[0] || "",
-      data: converterDataBR(col[1]),
-      placa: col[2] || "",
-      quantidadeAbastecida: col[3] || ""
-    });
+   validos.push({
+  ordem: col[0]?.trim() || "",
+  data: converterDataBR(col[1]?.trim() || ""),
+  placa: col[2]?.trim() || "",
+  quantidadeAbastecida: col[3]?.trim() || ""
+});
 
   }
 
@@ -1095,18 +1096,12 @@ analisarImportBtn.addEventListener("click", async () => {
   </button>
   `;
 
-  importResult.innerHTML = html;
+importResult.innerHTML = html;
+
+window._importValidos = validos;
 
 const btnConfirm = document.getElementById("confirmImport");
-
-btnConfirm.onclick = () => {
-  confirmarImport();
-};
-  window._importValidos = validos;
-
-  document
-    .getElementById("confirmImport")
-    .addEventListener("click", confirmarImport);
+btnConfirm.onclick = confirmarImport;
 });
 
 /* ===== CONFIRMAR ===== */
@@ -1181,7 +1176,7 @@ async function confirmarImport(){
     let newValue = valor;
 
     try{
-      const updatePayload = buildUpdatePayload(colKey,newValue);
+   const updatePayload = { [colKey]: newValue };
      if(id){
   await db.collection("abastecimentos").doc(id).update(updatePayload);
 }
@@ -1379,7 +1374,79 @@ btnExcluirSelecionadas.addEventListener("click", async ()=>{
   }
 
 });
-  
+
+  /* ============================
+   COLAR DIRETO DO EXCEL
+============================ */
+
+document.addEventListener("paste", async (e) => {
+
+  const texto = e.clipboardData.getData("text");
+
+  if(!texto) return;
+
+  const linhas = texto.split("\n").filter(l => l.trim() !== "");
+
+  if(linhas.length === 0) return;
+
+  const registros = [];
+
+  linhas.forEach(l => {
+
+    const col = l.split("\t");
+
+    if(col.length === 4){
+
+      registros.push({
+        ordem: col[0]?.trim() || "",
+        data: converterDataBR(col[1]?.trim() || ""),
+        placa: col[2]?.trim() || "",
+        quantidadeAbastecida: col[3]?.trim() || ""
+      });
+
+    }
+
+  });
+
+  if(registros.length === 0) return;
+
+  const confirmar = confirm(
+    `Importar ${registros.length} registros do Excel?`
+  );
+
+  if(!confirmar) return;
+
+  try{
+
+    let batch = db.batch();
+    let count = 0;
+
+    for(const r of registros){
+
+      const ref = db.collection("abastecimentos").doc();
+      batch.set(ref, r);
+      count++;
+
+      if(count >= 450){
+        await batch.commit();
+        batch = db.batch();
+        count = 0;
+      }
+
+    }
+
+    if(count > 0){
+      await batch.commit();
+    }
+
+    alert(`✔ ${registros.length} registros importados.`);
+
+  }catch(err){
+    console.error(err);
+    alert("Erro ao importar.");
+  }
+
+});
 </script>
 </body>
 </html>
