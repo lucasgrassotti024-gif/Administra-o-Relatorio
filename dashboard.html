@@ -379,25 +379,36 @@ footer{ margin-top:16px; font-size:.75rem; color:var(--muted); text-align:center
     <div class="tag-periodo" id="tagPeriodo"></div>
   </header>
 
+  
   <div class="filters">
-    <div class="filter-chip">
-      <span>Mês</span>
-      <select id="filtroMes">
-        <option value="">Todos</option>
-        <option value="01">Jan</option>
-        <option value="02">Fev</option>
-        <option value="03">Mar</option>
-        <option value="04">Abr</option>
-        <option value="05">Mai</option>
-        <option value="06">Jun</option>
-        <option value="07">Jul</option>
-        <option value="08">Ago</option>
-        <option value="09">Set</option>
-        <option value="10">Out</option>
-        <option value="11">Nov</option>
-        <option value="12">Dez</option>
-      </select>
-    </div>
+
+  <div class="filter-chip">
+    <span>Ano</span>
+    <select id="filtroAno">
+      <option value="">Todos</option>
+    </select>
+  </div>
+
+  <div class="filter-chip">
+    <span>Mês</span>
+    <select id="filtroMes">
+      <option value="">Todos</option>
+      <option value="01">Jan</option>
+      <option value="02">Fev</option>
+      <option value="03">Mar</option>
+      <option value="04">Abr</option>
+      <option value="05">Mai</option>
+      <option value="06">Jun</option>
+      <option value="07">Jul</option>
+      <option value="08">Ago</option>
+      <option value="09">Set</option>
+      <option value="10">Out</option>
+      <option value="11">Nov</option>
+      <option value="12">Dez</option>
+    </select>
+  </div>
+
+    
     <div class="filter-chip">
       <span>Local</span>
       <div class="multi-select">
@@ -429,6 +440,10 @@ footer{ margin-top:16px; font-size:.75rem; color:var(--muted); text-align:center
     <div class="kpi-card">
       <span class="kpi-label">Tempo de Espera</span>
       <span class="kpi-value" id="kpiEspera">00:00</span>
+    </div>
+    <div class="kpi-card">
+     <span class="kpi-label">Combustível Total</span>
+     <span class="kpi-value" id="kpiCombustivel">0</span>
     </div>
   </div>
 
@@ -508,6 +523,8 @@ const panelLocalList=document.getElementById("panelLocalList");
 const applyLocalBtn=document.getElementById("applyLocal");
 const miniSummaryEl=document.getElementById("miniSummary");
 
+const kpiCombustivel=document.getElementById("kpiCombustivel");
+const filtroAnoEl=document.getElementById("filtroAno");
 const kpiAtividades=document.getElementById("kpiAtividades");
 const kpiTrabalhando=document.getElementById("kpiTrabalhando");
 const kpiDDS=document.getElementById("kpiDDS");
@@ -602,34 +619,34 @@ applyLocalBtn.onclick=()=>{
   panelLocal.classList.remove("open");
   aplicaFiltros();
 };
-
+  
 function aplicaFiltros(){
+
   const mes = filtroMesEl.value;
+  const ano = filtroAnoEl.value;
 
   filtrados = relatorios.filter(r=>{
 
-    // Segurança para data inexistente
-    if(mes){
-      if(!r.data) return false;
-      const mesRegistro = String(r.data).slice(5,7);
-      if(mesRegistro !== mes) return false;
-    }
+    if(!r.data) return false;
 
-    // Segurança para local inexistente
-    if(locaisSelecionados.size > 0){
-      if(!r.local) return false;
-      if(!locaisSelecionados.has(r.local)) return false;
-    }
+    const anoRegistro = r.data.slice(0,4);
+    const mesRegistro = r.data.slice(5,7);
+
+    if(ano && anoRegistro !== ano) return false;
+    if(mes && mesRegistro !== mes) return false;
 
     return true;
   });
 
   atualizarDashboard();
+ 
 }
 
 filtroMesEl.onchange = aplicaFiltros;
+filtroAnoEl.onchange = aplicaFiltros;
 
 function atualizarDashboard(){
+   let combustivelTotal = 0;
   kpiAtividades.textContent = filtrados.length;
   let tTrabalho=0, tDDS=0, tEspera=0;
   const mapArea={}, mapCamCount={}, mapCamTempo={};
@@ -638,6 +655,7 @@ const ddsContados = new Set();
 
 filtrados.forEach(r=>{
   const h = r.horarios || {};
+  combustivelTotal += Number(r.quantidadeAbastecida || 0);
 
   // Tempo Trabalhado
   tTrabalho += computeTrabalho(h);
@@ -665,12 +683,16 @@ tDDS += parseTimeToMinutes(h.ddsChecklist || 0);
   mapCamCount[placa] = (mapCamCount[placa]||0) + 1;
   mapCamTempo[placa] = (mapCamTempo[placa]||0) + computeTrabalho(h);
 });
+  
   kpiTrabalhando.textContent = formatMinutesAsHhMm(tTrabalho);
   kpiDDS.textContent = formatMinutesAsHhMm(tDDS);
   kpiEspera.textContent = formatMinutesAsHhMm(tEspera);
   
   renderCharts(mapArea, mapCamCount, mapCamTempo);
   miniSummaryEl.textContent = filtrados.length > 0 ? "Dados atualizados com sucesso." : "Nenhum dado encontrado para os filtros.";
+
+  kpiCombustivel.textContent = combustivelTotal + " L";
+  
 }
 
 function getLabelColor(){
@@ -790,19 +812,32 @@ function renderCharts(mArea, mCamC, mCamT){
   
 async function carregarDados(){
   try {
+
     const snap = await db.collection("relatoriosCampo").get();
     relatorios = snap.docs.map(d => d.data());
-    
-    const locs = [...new Set(relatorios.map(r=>r.local).filter(Boolean))].sort();
-    panelLocalList.innerHTML = locs.map(l => `
-      <label class="multi-option"><input type="checkbox" data-value="${l}"> ${l}</label>
-    `).join('');
-    
-    aplicaFiltros();
-  } catch(e) { miniSummaryEl.textContent = "Erro ao carregar dados."; }
-}
 
-carregarDados();
+    const anos = [...new Set(
+      relatorios.map(r => r.data?.slice(0,4)).filter(Boolean)
+    )].sort();
+
+    filtroAnoEl.innerHTML =
+      `<option value="">Todos</option>` +
+      anos.map(a => `<option value="${a}">${a}</option>`).join("");
+
+    const locs = [...new Set(relatorios.map(r=>r.local).filter(Boolean))].sort();
+
+    panelLocalList.innerHTML = locs.map(l => `
+      <label class="multi-option">
+        <input type="checkbox" data-value="${l}"> ${l}
+      </label>
+    `).join('');
+
+    aplicaFiltros();
+
+  } catch(e){
+    miniSummaryEl.textContent = "Erro ao carregar dados.";
+  }
+}
 </script>
 </body>
 </html>
