@@ -719,24 +719,6 @@ function parseDurationInputToMinutes(str){
   return n;
 }
 
-  function normalizarTexto(txt){
-
-  if(!txt) return "";
-
-  txt = String(txt);
-
-  // remove acentos
-  txt = txt.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-
-  // deixa tudo minúsculo
-  txt = txt.toLowerCase();
-
-  // primeira letra maiúscula
-  txt = txt.charAt(0).toUpperCase() + txt.slice(1);
-
-  return txt;
-}
-
 /* ===== Definição de colunas ===== */
 const columns=[
   {key:"numeroPT",            label:"Nº PT",                 editable:false},
@@ -781,11 +763,10 @@ let globalSearchTerm = "";
 
 const globalSearch = document.getElementById("globalSearch");
 if(globalSearch){
-  globalSearch.addEventListener("input", () => {
-   globalSearchTerm = globalSearch.value;
-    aplicarFiltrosEAtualizar();
-  });
-}
+ globalSearch.addEventListener("input", () => {
+  globalSearchTerm = globalSearch.value;
+  aplicarFiltrosEAtualizar();
+});
 
 const colFilterPanel=document.getElementById("colFilterPanel");
 const colFilterTitle=document.getElementById("colFilterTitle");
@@ -912,11 +893,7 @@ function renderHeader(){
 
         
         if(val==null) val="";
-      if(col.key === "local"){
-  td.textContent = normalizarTexto(val);
-}else{
-  td.textContent = String(val);
-}
+      td.textContent = String(val);
 
         if(col.editable) td.contentEditable="true";
       }
@@ -941,9 +918,9 @@ function aplicarFiltrosEAtualizar(){
 
     // 🔎 Filtro global por palavra
     if(globalSearchTerm){
-      const match = Object.values(r).some(val =>
-       String(val ?? "").includes(globalSearchTerm)                                     
-      );
+     const match = Object.values(r).some(val =>
+  String(val ?? "").includes(globalSearchTerm)
+);
       if(!match) return false;
     }
 
@@ -988,7 +965,7 @@ sheetBody.addEventListener("blur",async (e)=>{
 if(colKey === "local"){
   newValue = normalizarTexto(newValue);
   td.textContent = newValue;
-}
+}let newValue = td.textContent.trim();
 
   
   if(colKey==="duracaoMinutos"){
