@@ -668,7 +668,13 @@ const ddsContados = new Set();
 
 filtrados.forEach(r=>{
   const h = r.horarios || {};
-  combustivelTotal += Number(r.quantidadeAbastecida || 0);
+  
+ combustivelTotal += Number(
+  r.quantidadeAbastecida ||
+  r.quantidadeAbastecimento ||
+  r.quantidade ||
+  0
+);
 
   // Tempo Trabalhado
   tTrabalho += computeTrabalho(h);
@@ -825,6 +831,9 @@ function renderCharts(mArea, mCamC, mCamT){
   
 async function carregarDados(){
   try {
+
+    const snapComb = await db.collection("abastecimentos").get();
+const abastecimentos = snapComb.docs.map(d => d.data());
 
     const snap = await db.collection("relatoriosCampo").get();
     relatorios = snap.docs.map(d => d.data());
