@@ -1616,6 +1616,49 @@ btnExcluirSelecionadas.addEventListener("click", async ()=>{
   }
 
 });
+
+
+
+  async function corrigirLocaisBanco(){
+
+  const snapshot = await db.collection("relatoriosCampo").get();
+
+  let batch = db.batch();
+  let count = 0;
+
+  snapshot.forEach(doc => {
+
+    const dados = doc.data();
+    const localAtual = dados.local || "";
+
+    const localCorrigido = normalizarTexto(localAtual);
+
+    if(localAtual !== localCorrigido){
+
+      batch.update(doc.ref, {
+        local: localCorrigido
+      });
+
+      count++;
+
+      if(count >= 450){
+        batch.commit();
+        batch = db.batch();
+        count = 0;
+      }
+
+    }
+
+  });
+
+  if(count > 0){
+    await batch.commit();
+  }
+
+  alert("Todos os locais foram corrigidos.");
+}
+
+
   
 </script>
 </body>
