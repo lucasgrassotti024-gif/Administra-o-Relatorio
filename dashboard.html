@@ -510,6 +510,7 @@ sidebarHandle.addEventListener("click",()=>{
 });
 
 /* Lógica de Dados e Gráficos */
+let abastecimentos = [];
 let relatorios = [];
 let filtrados = [];
 let locaisDisponiveis = [];
@@ -666,15 +667,41 @@ function atualizarDashboard(){
 
 const ddsContados = new Set();
 
+  abastecimentos.forEach(a => {
+
+  if(!a.data) return;
+
+  let anoRegistro;
+  let mesRegistro;
+
+  if(a.data.includes("/")){
+    const partes = a.data.split("/");
+    mesRegistro = partes[1];
+    anoRegistro = partes[2];
+  }else{
+    anoRegistro = a.data.slice(0,4);
+    mesRegistro = a.data.slice(5,7);
+  }
+
+  const ano = filtroAnoEl.value;
+  const mes = filtroMesEl.value;
+
+  if(ano && anoRegistro !== ano) return;
+  if(mes && mesRegistro !== mes) return;
+
+  combustivelTotal += Number(
+    a.quantidade ||
+    a.quantidadeAbastecida ||
+    a.quantidadeAbastecimento ||
+    0
+  );
+
+});
+
 filtrados.forEach(r=>{
   const h = r.horarios || {};
   
- combustivelTotal += Number(
-  r.quantidadeAbastecida ||
-  r.quantidadeAbastecimento ||
-  r.quantidade ||
-  0
-);
+
 
   // Tempo Trabalhado
   tTrabalho += computeTrabalho(h);
@@ -832,8 +859,8 @@ function renderCharts(mArea, mCamC, mCamT){
 async function carregarDados(){
   try {
 
-    const snapComb = await db.collection("abastecimentos").get();
-const abastecimentos = snapComb.docs.map(d => d.data());
+ const snapComb = await db.collection("abastecimentos").get();
+abastecimentos = snapComb.docs.map(d => d.data());
 
     const snap = await db.collection("relatoriosCampo").get();
     relatorios = snap.docs.map(d => d.data());
