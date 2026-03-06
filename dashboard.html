@@ -568,8 +568,15 @@ function diffMinutes(a, b){
 
 function formatMinutesAsHhMm(min){
   if(!min || min <= 0) return "00:00";
-  const h = Math.floor(min/60), m = min % 60;
-  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+
+  const h = Math.floor(min/60);
+  const m = min % 60;
+
+  return `${Number(h).toLocaleString("pt-BR")}:${String(m).padStart(2,"0")}`;
+}
+
+  function formatarNumero(n){
+  return Number(n).toLocaleString("pt-BR");
 }
 
 function computeTrabalho(h){
@@ -661,7 +668,7 @@ filtroAnoEl.onchange = aplicaFiltros;
 
 function atualizarDashboard(){
    let combustivelTotal = 0;
-  kpiAtividades.textContent = filtrados.length;
+ kpiAtividades.textContent = formatarNumero(filtrados.length);
   let tTrabalho=0, tDDS=0, tEspera=0;
   const mapArea={}, mapCamCount={}, mapCamTempo={};
 
@@ -737,7 +744,7 @@ tDDS += parseTimeToMinutes(h.ddsChecklist || 0);
   renderCharts(mapArea, mapCamCount, mapCamTempo);
   miniSummaryEl.textContent = filtrados.length > 0 ? "Dados atualizados com sucesso." : "Nenhum dado encontrado para os filtros.";
 
-  kpiCombustivel.textContent = combustivelTotal + " L";
+ kpiCombustivel.textContent = formatarNumero(combustivelTotal) + " L";
   
 }
 
