@@ -629,17 +629,30 @@ function aplicaFiltros(){
 
     if(!r.data) return false;
 
-    const anoRegistro = r.data.slice(0,4);
-    const mesRegistro = r.data.slice(5,7);
+    let anoRegistro;
+    let mesRegistro;
+
+    if(r.data.includes("/")){
+
+      const partes = r.data.split("/");
+      mesRegistro = partes[1];
+      anoRegistro = partes[2];
+
+    }else{
+
+      anoRegistro = r.data.slice(0,4);
+      mesRegistro = r.data.slice(5,7);
+
+    }
 
     if(ano && anoRegistro !== ano) return false;
     if(mes && mesRegistro !== mes) return false;
 
     return true;
+
   });
 
   atualizarDashboard();
- 
 }
 
 filtroMesEl.onchange = aplicaFiltros;
@@ -816,9 +829,7 @@ async function carregarDados(){
     const snap = await db.collection("relatoriosCampo").get();
     relatorios = snap.docs.map(d => d.data());
 
-    const anos = [...new Set(
-      relatorios.map(r => r.data?.slice(0,4)).filter(Boolean)
-    )].sort();
+    const anos = ["2026","2025","2024","2023","2022"];
 
     filtroAnoEl.innerHTML =
       `<option value="">Todos</option>` +
@@ -838,6 +849,9 @@ async function carregarDados(){
     miniSummaryEl.textContent = "Erro ao carregar dados.";
   }
 }
+
+carregarDados();
+  
 </script>
 </body>
 </html>
