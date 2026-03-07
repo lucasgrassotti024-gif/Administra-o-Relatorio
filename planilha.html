@@ -962,12 +962,6 @@ sheetBody.addEventListener("blur",async (e)=>{
   
  let newValue = td.textContent.trim();
 
-if(colKey === "local"){
-  newValue = normalizarTexto(newValue);
-  td.textContent = newValue;
-}let newValue = td.textContent.trim();
-
-  
   if(colKey==="duracaoMinutos"){
     const mins=parseDurationInputToMinutes(newValue);
     if(mins==null){
