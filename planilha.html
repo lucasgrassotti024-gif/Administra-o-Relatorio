@@ -501,6 +501,20 @@ footer{
 
 <div id="colFilterPanel">
   <div id="colFilterTitle">Filtrar</div>
+
+  <input type="text" id="colFilterSearch"
+    placeholder="🔎 Buscar..."
+    style="
+      width:100%;
+      margin-bottom:6px;
+      padding:5px 6px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      font-size:.75rem;
+      background:var(--bg);
+      color:var(--text);
+    ">
+
   <div id="colFilterList"></div>
   <div id="colFilterActions">
     <button type="button" id="clearColFilter">Limpar</button>
@@ -655,6 +669,8 @@ const sheetHeaderRow=document.getElementById("sheetHeaderRow");
 const sheetBody=document.getElementById("sheetBody");
 const subtitleInfo=document.getElementById("subtitleInfo");
 
+tableWrapper.addEventListener("scroll", ()=>{renderBody();});
+
 const btnToggleAdvanced=document.getElementById("btnToggleAdvanced");
 const labelAdvanced=document.getElementById("labelAdvanced");
 const btnExportCsv=document.getElementById("btnExportCsv");
@@ -759,24 +775,36 @@ let relatoriosRaw=[];
 let relatoriosFiltrados=[];
 let activeFilters={};
 
+const ROW_HEIGHT = 34;
+const BUFFER = 10;
+
+let startIndex = 0;
+let endIndex = 0;
+
 let globalSearchTerm = "";
 
 const globalSearch = document.getElementById("globalSearch");
+
 if(globalSearch){
- globalSearch.addEventListener("input", () => {
-  globalSearchTerm = globalSearch.value;
-  aplicarFiltrosEAtualizar();
-});
+  globalSearch.addEventListener("input", () => {
+    globalSearchTerm = globalSearch.value;
+    aplicarFiltrosEAtualizar();
+  });
+}
 
 const colFilterPanel=document.getElementById("colFilterPanel");
 const colFilterTitle=document.getElementById("colFilterTitle");
 const colFilterList=document.getElementById("colFilterList");
+const colFilterSearch = document.getElementById("colFilterSearch");
 const applyColFilter=document.getElementById("applyColFilter");
 const clearColFilter=document.getElementById("clearColFilter");
 
 let currentFilterCol=null;
 
 function openFilterPanelFor(colKey){
+
+colFilterSearch.value = "";
+  
   currentFilterCol=colKey;
   const colConf=columns.find(c=>c.key===colKey);
   colFilterTitle.textContent=`Filtrar: ${colConf ? colConf.label : colKey}`;
@@ -829,6 +857,25 @@ window.addEventListener("click",(e)=>{
   if(!colFilterPanel.contains(e.target)) colFilterPanel.classList.remove("open");
 });
 
+colFilterSearch.addEventListener("input", () => {
+
+  const termo = colFilterSearch.value.toLowerCase();
+  const options = colFilterList.querySelectorAll(".col-option");
+
+  options.forEach(opt => {
+
+    const texto = opt.textContent.toLowerCase();
+
+    if(texto.includes(termo)){
+      opt.style.display = "";
+    }else{
+      opt.style.display = "none";
+    }
+
+  });
+
+});
+
 function renderHeader(){
   sheetHeaderRow.innerHTML="";
   columns.forEach(col=>{
@@ -845,10 +892,35 @@ function renderHeader(){
   });
 }
 
-  function renderBody(){
-  sheetBody.innerHTML="";
+function renderBody(){
 
-  relatoriosFiltrados.forEach(r=>{
+  const scrollTop = tableWrapper.scrollTop;
+  const visibleHeight = tableWrapper.clientHeight;
+  const total = relatoriosFiltrados.length;
+
+  startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER);
+  endIndex = Math.min(
+    total,
+    Math.ceil((scrollTop + visibleHeight) / ROW_HEIGHT) + BUFFER
+  );
+
+  const visibleRows = relatoriosFiltrados.slice(startIndex, endIndex);
+
+  sheetBody.innerHTML = "";
+
+  // spacer superior
+  if(startIndex > 0){
+    const trSpacerTop = document.createElement("tr");
+    const tdSpacerTop = document.createElement("td");
+    tdSpacerTop.colSpan = columns.length;
+    tdSpacerTop.style.height = (startIndex * ROW_HEIGHT) + "px";
+    tdSpacerTop.style.border = "none";
+    trSpacerTop.appendChild(tdSpacerTop);
+    sheetBody.appendChild(trSpacerTop);
+  }
+
+  visibleRows.forEach(r=>{
+
     const tr=document.createElement("tr");
     tr.dataset.id=r.id;
 
@@ -856,44 +928,33 @@ function renderHeader(){
       const td=document.createElement("td");
       td.dataset.col=col.key;
 
-      // BOTÃO EXCLUIR
       if(col.key==="acaoExcluir"){
 
-        td.innerHTML = `
-          <button style="
-            background:#dc2626;
-            color:white;
-            border:none;
-            border-radius:6px;
-            padding:4px 8px;
-            cursor:pointer;
-            font-size:.75rem;
-          ">
-            🗑️
-          </button>
+        td.innerHTML=`
+        <button style="
+          background:#dc2626;
+          color:white;
+          border:none;
+          border-radius:6px;
+          padding:4px 8px;
+          cursor:pointer;
+          font-size:.75rem;
+        ">🗑️</button>
         `;
 
         td.querySelector("button").addEventListener("click", async ()=>{
-          const confirmar = confirm("Deseja realmente excluir este relatório?");
-          if(!confirmar) return;
-
-          try{
-            await db.collection("relatoriosCampo").doc(r.id).delete();
-          }catch(err){
-            alert("Erro ao excluir.");
-            console.error(err);
-          }
+          if(!confirm("Deseja realmente excluir este relatório?")) return;
+          await db.collection("relatoriosCampo").doc(r.id).delete();
         });
 
-      } else {
+      }else{
 
         if(col.advanced) td.classList.add("advanced-col");
 
-        let val = r[col.key];
-
-        
+        let val=r[col.key];
         if(val==null) val="";
-      td.textContent = String(val);
+
+        td.textContent=String(val);
 
         if(col.editable) td.contentEditable="true";
       }
@@ -903,6 +964,17 @@ function renderHeader(){
 
     sheetBody.appendChild(tr);
   });
+
+  // spacer inferior
+  if(endIndex < total){
+    const trSpacerBottom = document.createElement("tr");
+    const tdSpacerBottom = document.createElement("td");
+    tdSpacerBottom.colSpan = columns.length;
+    tdSpacerBottom.style.height = ((total - endIndex) * ROW_HEIGHT) + "px";
+    tdSpacerBottom.style.border = "none";
+    trSpacerBottom.appendChild(tdSpacerBottom);
+    sheetBody.appendChild(trSpacerBottom);
+  }
 }
 
 function aplicarFiltrosEAtualizar(){
@@ -919,7 +991,16 @@ function aplicarFiltrosEAtualizar(){
     // 🔎 Filtro global por palavra
     if(globalSearchTerm){
      const match = Object.values(r).some(val =>
-  String(val ?? "").includes(globalSearchTerm)
+ String(val ?? "")
+.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.includes(
+  globalSearchTerm
+  .toLowerCase()
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g,"")
+)
 );
       if(!match) return false;
     }
@@ -1587,49 +1668,6 @@ btnExcluirSelecionadas.addEventListener("click", async ()=>{
   }
 
 });
-
-
-
-  async function corrigirLocaisBanco(){
-
-  const snapshot = await db.collection("relatoriosCampo").get();
-
-  let batch = db.batch();
-  let count = 0;
-
-  snapshot.forEach(doc => {
-
-    const dados = doc.data();
-    const localAtual = dados.local || "";
-
-    const localCorrigido = normalizarTexto(localAtual);
-
-    if(localAtual !== localCorrigido){
-
-      batch.update(doc.ref, {
-        local: localCorrigido
-      });
-
-      count++;
-
-      if(count >= 450){
-        batch.commit();
-        batch = db.batch();
-        count = 0;
-      }
-
-    }
-
-  });
-
-  if(count > 0){
-    await batch.commit();
-  }
-
-  alert("Todos os locais foram corrigidos.");
-}
-
-
   
 </script>
 </body>
