@@ -669,8 +669,6 @@ const sheetHeaderRow=document.getElementById("sheetHeaderRow");
 const sheetBody=document.getElementById("sheetBody");
 const subtitleInfo=document.getElementById("subtitleInfo");
 
-tableWrapper.addEventListener("scroll", ()=>{renderBody();});
-
 const btnToggleAdvanced=document.getElementById("btnToggleAdvanced");
 const labelAdvanced=document.getElementById("labelAdvanced");
 const btnExportCsv=document.getElementById("btnExportCsv");
@@ -774,12 +772,6 @@ const columns=[
 let relatoriosRaw=[];
 let relatoriosFiltrados=[];
 let activeFilters={};
-
-const ROW_HEIGHT = 34;
-const BUFFER = 10;
-
-let startIndex = 0;
-let endIndex = 0;
 
 let globalSearchTerm = "";
 
@@ -894,44 +886,21 @@ function renderHeader(){
 
 function renderBody(){
 
-  const scrollTop = tableWrapper.scrollTop;
-  const visibleHeight = tableWrapper.clientHeight;
-  const total = relatoriosFiltrados.length;
-
-  startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER);
-  endIndex = Math.min(
-    total,
-    Math.ceil((scrollTop + visibleHeight) / ROW_HEIGHT) + BUFFER
-  );
-
-  const visibleRows = relatoriosFiltrados.slice(startIndex, endIndex);
-
   sheetBody.innerHTML = "";
 
-  // ===== spacer superior =====
-  if(startIndex > 0){
-    const spacerTop = document.createElement("tr");
-    const td = document.createElement("td");
-    td.colSpan = columns.length;
-    td.style.height = (startIndex * ROW_HEIGHT) + "px";
-    td.style.border = "none";
-    spacerTop.appendChild(td);
-    sheetBody.appendChild(spacerTop);
-  }
+  relatoriosFiltrados.forEach(r=>{
 
-  // ===== linhas visíveis =====
-  visibleRows.forEach(r=>{
-
-    const tr=document.createElement("tr");
-    tr.dataset.id=r.id;
+    const tr = document.createElement("tr");
+    tr.dataset.id = r.id;
 
     columns.forEach(col=>{
-      const td=document.createElement("td");
-      td.dataset.col=col.key;
+
+      const td = document.createElement("td");
+      td.dataset.col = col.key;
 
       if(col.key==="acaoExcluir"){
 
-        td.innerHTML=`
+        td.innerHTML = `
         <button style="
           background:#dc2626;
           color:white;
@@ -948,34 +917,28 @@ function renderBody(){
           await db.collection("relatoriosCampo").doc(r.id).delete();
         });
 
-      }else{
+      } else {
 
         if(col.advanced) td.classList.add("advanced-col");
 
-        let val=r[col.key];
-        if(val==null) val="";
+        let val = r[col.key];
+        if(val == null) val = "";
 
-        td.textContent=String(val);
+        td.textContent = String(val);
 
-        if(col.editable) td.contentEditable="true";
+        if(col.editable){
+          td.contentEditable = "true";
+        }
+
       }
 
       tr.appendChild(td);
+
     });
 
     sheetBody.appendChild(tr);
-  });
 
-  // ===== spacer inferior =====
-  if(endIndex < total){
-    const spacerBottom = document.createElement("tr");
-    const td = document.createElement("td");
-    td.colSpan = columns.length;
-    td.style.height = ((total - endIndex) * ROW_HEIGHT) + "px";
-    td.style.border = "none";
-    spacerBottom.appendChild(td);
-    sheetBody.appendChild(spacerBottom);
-  }
+  });
 
 }
 
