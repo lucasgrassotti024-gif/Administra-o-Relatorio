@@ -907,16 +907,13 @@ function renderBody(){
   const visibleRows = relatoriosFiltrados.slice(startIndex, endIndex);
 
   sheetBody.innerHTML = "";
+  sheetBody.style.height = (total * ROW_HEIGHT) + "px";
 
   // spacer superior
   if(startIndex > 0){
-    const trSpacerTop = document.createElement("tr");
-    const tdSpacerTop = document.createElement("td");
-    tdSpacerTop.colSpan = columns.length;
-    tdSpacerTop.style.height = (startIndex * ROW_HEIGHT) + "px";
-    tdSpacerTop.style.border = "none";
-    trSpacerTop.appendChild(tdSpacerTop);
-    sheetBody.appendChild(trSpacerTop);
+   const spacerTop = document.createElement("tr");
+spacerTop.style.height = (startIndex * ROW_HEIGHT) + "px";
+sheetBody.appendChild(spacerTop);
   }
 
   visibleRows.forEach(r=>{
@@ -967,15 +964,11 @@ function renderBody(){
 
   // spacer inferior
   if(endIndex < total){
-    const trSpacerBottom = document.createElement("tr");
-    const tdSpacerBottom = document.createElement("td");
-    tdSpacerBottom.colSpan = columns.length;
-    tdSpacerBottom.style.height = ((total - endIndex) * ROW_HEIGHT) + "px";
-    tdSpacerBottom.style.border = "none";
-    trSpacerBottom.appendChild(tdSpacerBottom);
-    sheetBody.appendChild(trSpacerBottom);
+   const spacerBottom = document.createElement("tr");
+spacerBottom.style.height = ((total - endIndex) * ROW_HEIGHT) + "px";
+sheetBody.appendChild(spacerBottom);
   }
-}
+
 
 function aplicarFiltrosEAtualizar(){
   relatoriosFiltrados = relatoriosRaw.filter(r=>{
