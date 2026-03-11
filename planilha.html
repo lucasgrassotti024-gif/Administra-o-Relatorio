@@ -907,15 +907,19 @@ function renderBody(){
   const visibleRows = relatoriosFiltrados.slice(startIndex, endIndex);
 
   sheetBody.innerHTML = "";
-  sheetBody.style.height = (total * ROW_HEIGHT) + "px";
 
-  // spacer superior
+  // ===== spacer superior =====
   if(startIndex > 0){
-   const spacerTop = document.createElement("tr");
-spacerTop.style.height = (startIndex * ROW_HEIGHT) + "px";
-sheetBody.appendChild(spacerTop);
+    const spacerTop = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = columns.length;
+    td.style.height = (startIndex * ROW_HEIGHT) + "px";
+    td.style.border = "none";
+    spacerTop.appendChild(td);
+    sheetBody.appendChild(spacerTop);
   }
 
+  // ===== linhas visíveis =====
   visibleRows.forEach(r=>{
 
     const tr=document.createElement("tr");
@@ -962,12 +966,17 @@ sheetBody.appendChild(spacerTop);
     sheetBody.appendChild(tr);
   });
 
-  // spacer inferior
+  // ===== spacer inferior =====
   if(endIndex < total){
-   const spacerBottom = document.createElement("tr");
-spacerBottom.style.height = ((total - endIndex) * ROW_HEIGHT) + "px";
-sheetBody.appendChild(spacerBottom);
+    const spacerBottom = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = columns.length;
+    td.style.height = ((total - endIndex) * ROW_HEIGHT) + "px";
+    td.style.border = "none";
+    spacerBottom.appendChild(td);
+    sheetBody.appendChild(spacerBottom);
   }
+
 }
 
 function aplicarFiltrosEAtualizar(){
