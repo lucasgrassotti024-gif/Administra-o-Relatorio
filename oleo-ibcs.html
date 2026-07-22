@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planilha — Óleo descartado em IBCs</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary:#2563eb;
+  --accent:#1d4ed8;
+  --bg:#f3f6fb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --shadow-soft:0 10px 30px rgba(15,23,42,0.10);
+  --shadow-hard:0 18px 45px rgba(15,23,42,0.20);
+  --sidebar-bg:#ffffff;
+  --sidebar-text:#111827;
+  --sidebar-link:#111827;
+  --table-header-bg:rgba(37,99,235,0.06);
+  --table-header-border:#cbd5f5;
+  --table-row-alt:rgba(15,23,42,0.015);
+}
+.dark {
+  --bg:#020617;
+  --card:#020617;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --border:#111827;
+  --shadow-soft:0 10px 30px rgba(0,0,0,0.60);
+  --shadow-hard:0 18px 45px rgba(0,0,0,0.80);
+  --sidebar-bg:#020617;
+  --sidebar-text:#e5e7eb;
+  --sidebar-link:#e5e7eb;
+  --table-header-bg:rgba(15,23,42,0.92);
+  --table-header-border:#1e293b;
+  --table-row-alt:rgba(15,23,42,0.45);
+}
+
+*{
+  box-sizing:border-box;
+  font-family:"Inter",sans-serif;
+  transition:background-color .25s ease,color .25s ease,border-color .25s ease;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:230px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-text);
+  display:flex;
+  flex-direction:column;
+  padding:14px 12px;
+  gap:14px;
+  position:fixed;
+  inset-block:0;
+  left:0;
+  z-index:40;
+  box-shadow:var(--shadow-hard);
+  transform:translateX(-100%);
+  transition:transform .25s ease;
+}
+body.sidebar-open .sidebar{
+  transform:translateX(0);
+}
+.sidebar-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.sidebar-title-block{
+  display:flex;
+  flex-direction:column;
+}
+.sidebar-title{
+  font-family:"Outfit";
+  font-weight:800;
+  font-size:1.0rem;
+}
+.sidebar-sub{
+  font-size:.72rem;
+  color:var(--muted);
+}
+.sidebar-toggle-theme{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:1px solid rgba(148,163,184,0.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:transparent;
+  font-size:1rem;
+  color:var(--sidebar-text);
+}
+.sidebar-nav{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.sidebar-link{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 9px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:.85rem;
+  color:var(--sidebar-link);
+  cursor:pointer;
+}
+.sidebar-link.active{
+  background:rgba(37,99,235,0.15);
+  font-weight: 600;
+}
+.sidebar-link:hover:not(.active) {
+  background:rgba(37,99,235,0.05);
+}
+
+.sidebar-handle{
+  position:fixed;
+  top:14px;
+  left:10px;
+  z-index:45;
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  background:#2563eb;
+  color:#f9fafb;
+  box-shadow:0 8px 20px rgba(37,99,235,0.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+}
+
+/* MAIN */
+.main-wrapper{
+  flex:1;
+  min-height:100vh;
+  padding:18px 20px 24px;
+  display:flex;
+  flex-direction:column;
+}
+@media(max-width:900px){
+  .main-wrapper{ padding-top:56px; }
+}
+
+.topbar-mobile{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:48px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:"Outfit";
+  font-weight:700;
+  font-size:.9rem;
+  z-index:30;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+@media(min-width:901px){ .topbar-mobile{display:none;} }
+
+.page-header{ margin-bottom:10px; }
+.page-title{ font-family:"Outfit"; font-weight:800; font-size:1.4rem; }
+.page-sub{ font-size:.8rem; color:var(--muted); height: 1.2rem; }
+
+.table-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:8px;
+  margin-bottom:4px;
+  align-items:center;
+}
+
+.stats-card{
+  background:var(--card);
+  border-radius:14px;
+  padding:12px 16px;
+  box-shadow:var(--shadow-soft);
+  border:1px solid var(--table-header-border);
+  display:flex;
+  flex-direction:column;
+  min-width:240px;
+}
+.stats-row{ display:flex; gap:20px; align-items:baseline; }
+.stats-big{ font-size:1.3rem; font-weight:800; color:var(--primary); }
+.stats-label{ font-size:.75rem; color:var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.filter-mes select{
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--card);
+  font-size:.85rem;
+  color:var(--text);
+  outline: none;
+}
+
+.table-wrapper{
+  margin-top:12px;
+  background:var(--card);
+  border-radius:18px;
+  box-shadow:var(--shadow-soft);
+  border:1px solid var(--table-header-border);
+  padding:12px;
+  overflow:auto;
+  cursor:grab;
+}
+.table-wrapper.dragging{ cursor:grabbing; }
+
+table{ border-collapse:collapse; min-width:900px; width: 100%; }
+thead{ position:sticky; top:0; z-index:5; background:var(--table-header-bg); }
+th,td{ border:1px solid var(--border); padding:10px 12px; font-size:.8rem; white-space:nowrap; }
+th{ font-weight:700; text-align:left; color: var(--primary); }
+tbody tr:nth-child(even){ background:var(--table-row-alt); }
+tbody tr:hover{ background:rgba(37,99,235,0.06); }
+
+footer{ margin-top:20px; font-size:.75rem; color:var(--muted); text-align:center; padding: 10px; }
+
+.sidebar-group-btn{
+
+    width:100%;
+    background:none;
+    border:none;
+    color:inherit;
+    text-align:left;
+    padding:12px 16px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:15px;
+
+}
+
+.sidebar-group-btn:hover{
+
+    background:rgba(255,255,255,.08);
+
+}
+
+.sidebar-group{
+
+    overflow:hidden;
+    margin-left:8px;
+
+}
+
+.sidebar-group.fechado{
+
+    display:none;
+
+}
+
+</style>
+</head>
+<body class="sidebar-open">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title-block">
+      <span class="sidebar-title">Relatórios de Campo</span>
+      <span class="sidebar-sub">CMPC • RSS3</span>
+    </div>
+    <button id="themeToggle" class="sidebar-toggle-theme" type="button">🌙</button>
+  </div>
+
+   <nav class="sidebar-nav">
+
+  <!-- HIDROJATO / VÁCUO -->
+  <button class="sidebar-group-btn" onclick="toggleSidebarGroup('grupoHV')">
+      📁 Hidrojato / Vácuo
+  </button>
+
+  <div id="grupoHV" class="sidebar-group fechado">
+
+      <a href="admin.html" class="sidebar-link active">
+          <span class="icon">📋</span><span>Admin</span>
+      </a>
+
+      <a href="dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span><span>Dashboard</span>
+      </a>
+
+      <a href="planilha.html" class="sidebar-link">
+          <span class="icon">📑</span><span>Planilha</span>
+      </a>
+
+      <a href="oleo-ibcs.html" class="sidebar-link">
+          <span class="icon">🛢️</span><span>Óleo em IBCs</span>
+      </a>
+
+      <a href="abastecimento.html" class="sidebar-link">
+          <span class="icon">⛽</span><span>Abastecimento</span>
+      </a>
+
+      <a href="excluidos.html" class="sidebar-link">
+          <span class="icon">🗑️</span><span>Excluídos</span>
+      </a>
+
+      <a href="notificacoes.html" class="sidebar-link">
+          <span class="icon">🔔</span><span>Notificações</span>
+      </a>
+
+  </div>
+
+
+  <!-- AUDITORIAS -->
+  <button class="sidebar-group-btn" onclick="toggleSidebarGroup('grupoAuditoria')">
+      📁 Auditorias
+  </button>
+
+  <div id="grupoAuditoria" class="sidebar-group fechado">
+
+      <a href="admin-auditoria.html" class="sidebar-link">
+          <span class="icon">✅</span>
+          <span>Admin Auditorias</span>
+      </a>
+
+      <a href="auditorias-excluidas.html" class="sidebar-link">
+          <span class="icon">🗑️</span>
+          <span>Auditorias Excluídas</span>
+      </a>
+
+      <a href="auditoria-notificacoes.html" class="sidebar-link">
+          <span class="icon">🔔</span>
+          <span>Notificações Auditorias</span>
+      </a>
+
+  </div>
+
+</nav> 
+
+<a href="oleo-ibcs.html" class="sidebar-link active"></a>
+
+  <div class="sidebar-footer">Planilha de óleo<br>Descartado em IBCs.</div>
+</aside>
+
+<button id="sidebarHandle" class="sidebar-handle" type="button">☰</button>
+<div class="topbar-mobile">Planilha — Óleo em IBCs</div>
+
+<div class="main-wrapper">
+  <header class="page-header">
+    <div>
+      <div class="page-title">Relatório de Óleo em IBCs</div>
+      <div class="page-sub" id="subtitleInfo">Sincronizando com Firebase...</div>
+    </div>
+  </header>
+
+  <div class="table-actions">
+    <div class="stats-card">
+      <div class="stats-row">
+        <div>
+          <div class="stats-big" id="statsLitros">0</div>
+          <div class="stats-label">Total Litros</div>
+        </div>
+        <div>
+          <div class="stats-big" id="statsAtividades">0</div>
+          <div class="stats-label">Registros</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-mes">
+      <select id="filtroMes">
+        <option value="">Todos os Meses</option>
+        <option value="01">Janeiro</option>
+        <option value="02">Fevereiro</option>
+        <option value="03">Março</option>
+        <option value="04">Abril</option>
+        <option value="05">Maio</option>
+        <option value="06">Junho</option>
+        <option value="07">Julho</option>
+        <option value="08">Agosto</option>
+        <option value="09">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-wrapper" id="tableWrapper">
+    <table id="sheetTable">
+      <thead>
+        <tr id="sheetHeaderRow"></tr>
+      </thead>
+      <tbody id="sheetBody"></tbody>
+    </table>
+  </div>
+
+  <footer>© 2025 | Sistema RSS3 - Gestão de Resíduos</footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+// ATUALIZADO PARA O NOVO PROJETO relatorio-rss3-15896
+const firebaseConfig = {
+  apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
+  authDomain: "relatorio-rss3-15896.firebaseapp.com",
+  projectId: "relatorio-rss3-15896",
+  storageBucket: "relatorio-rss3-15896.firebasestorage.app",
+  messagingSenderId: "905086909082",
+  appId: "1:905086909082:web:7535afa8dddbd7b691fd23",
+  measurementId: "G-EPGW3FGXX5"
+};
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+const db = firebase.firestore();
+</script>
+
+<script>
+/* TEMA E UI */
+const themeToggle = document.getElementById("themeToggle");
+const sidebarHandle = document.getElementById("sidebarHandle");
+
+if(localStorage.getItem("tema") === "dark"){
+  document.body.classList.add("dark");
+  themeToggle.textContent = "☀️";
+}
+
+themeToggle.onclick = () => {
+  document.body.classList.toggle("dark");
+  const isDark = document.body.classList.contains("dark");
+  themeToggle.textContent = isDark ? "☀️" : "🌙";
+  localStorage.setItem("tema", isDark ? "dark" : "light");
+};
+
+sidebarHandle.onclick = () => document.body.classList.toggle("sidebar-open");
+
+/* LOGICA DA TABELA */
+const columns = [
+  {key:"numeroPT", label:"Nº PT"},
+  {key:"data", label:"Data"},
+  {key:"equipamento", label:"Equipamento"},
+  {key:"local", label:"Local"},
+  {key:"tipoServico", label:"Serviço"},
+  {key:"quantidade", label:"Qtd Inf."},
+  {key:"litros", label:"Litros Est."},
+  {key:"ondeDescartadoTexto", label:"Destino"},
+  {key:"operador", label:"Operador"}
+];
+
+let relatoriosAll = [];
+
+// Função de cálculo melhorada
+function quantidadeToLitros(q){
+  if(!q) return 0;
+  const txt = String(q).toLowerCase();
+  const match = txt.match(/[\d.,]+/);
+  if(!match) return 0;
+  let valor = parseFloat(match[0].replace(/\./g,"").replace(",","."));
+  if(isNaN(valor)) return 0;
+  
+  // Se mencionar IBC, multiplica por 1000
+  return txt.includes("ibc") ? valor * 1000 : valor;
+}
+
+function renderHeader(){
+  const hr = document.getElementById("sheetHeaderRow");
+  hr.innerHTML = columns.map(col => `<th>${col.label}</th>`).join("");
+}
+
+function renderTable(data){
+  const tbody = document.getElementById("sheetBody");
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      ${columns.map(col => {
+        let val = r[col.key] || "";
+        if(col.key === "data" && val.includes("-")){
+          const [y,m,d] = val.split("-");
+          val = `${d}/${m}/${y}`;
+        }
+        if(col.key === "litros"){
+          val = val > 0 ? val.toLocaleString("pt-BR") : "0";
+        }
+        return `<td>${val}</td>`;
+      }).join("")}
+    </tr>
+  `).join("");
+}
+
+function updateStats(data){
+  const totalLitros = data.reduce((acc, curr) => acc + (curr.litros || 0), 0);
+  document.getElementById("statsLitros").textContent = totalLitros.toLocaleString("pt-BR");
+  document.getElementById("statsAtividades").textContent = data.length;
+}
+
+async function carregarDados(){
+  const info = document.getElementById("subtitleInfo");
+  try {
+    // Escuta em tempo real (onSnapshot) para ser igual ao Admin
+    db.collection("relatoriosCampo")
+      .orderBy("numeroPT", "desc")
+      .onSnapshot(snap => {
+        relatoriosAll = [];
+        snap.forEach(doc => {
+          const d = doc.data();
+          const e = d.especificacoes || {};
+
+          // Filtros específicos para esta página
+          if(e.oleo === "Sim" && e.tipoAtividade === "Descarte" && e.ondeDescartadoTipo === "IBCs"){
+            const qtdTexto = e.quantidade || d.quantidade || "";
+            relatoriosAll.push({
+              numeroPT: d.numeroPT || d.numeroPt || "---",
+              data: d.data || "",
+              equipamento: d.equipamento || "",
+              local: d.local || "",
+              tipoServico: e.tipoServico || d.tipoServico || "",
+              quantidade: qtdTexto,
+              litros: quantidadeToLitros(qtdTexto),
+              ondeDescartadoTexto: e.ondeDescartadoTexto || "IBC",
+              operador: d.operador || ""
+            });
+          }
+        });
+        
+        renderHeader();
+        filtrar();
+        info.textContent = "Dados atualizados.";
+      });
+  } catch (err) {
+    info.textContent = "Erro na conexão.";
+    console.error(err);
+  }
+}
+
+function filtrar(){
+  const mes = document.getElementById("filtroMes").value;
+  const filtrados = relatoriosAll.filter(r => {
+    if(!mes) return true;
+    return r.data && r.data.split("-")[1] === mes;
+  });
+  renderTable(filtrados);
+  updateStats(filtrados);
+}
+
+document.getElementById("filtroMes").onchange = filtrar;
+
+// Drag Scroll
+const slider = document.getElementById("tableWrapper");
+let isDown = false, startX, scrollLeft;
+slider.onmousedown = (e) => { isDown = true; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; };
+slider.onmouseleave = () => isDown = false;
+slider.onmouseup = () => isDown = false;
+slider.onmousemove = (e) => { if(!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; slider.scrollLeft = scrollLeft - (x - startX); };
+
+carregarDados();
+
+function toggleSidebarGroup(id){
+
+    document.getElementById(id).classList.toggle("fechado");
+
+}
+
+</script>
+</body>
+</html>

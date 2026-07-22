@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard — Relatórios de Campo</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  
+<style>
+:root {
+  --primary:#2563eb;
+  --accent:#1d4ed8;
+  --bg:#f3f6fb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --shadow-soft:0 10px 30px rgba(15,23,42,0.10);
+  --shadow-hard:0 18px 45px rgba(15,23,42,0.20);
+
+  --sidebar-bg:#ffffff;
+  --sidebar-text:#111827;
+  --sidebar-link:#111827;
+}
+.dark {
+  --bg:#020617;
+  --card:#020617;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --border:#111827;
+  --shadow-soft:0 10px 30px rgba(0,0,0,0.60);
+  --shadow-hard:0 18px 45px rgba(0,0,0,0.80);
+
+  --sidebar-bg:#020617;
+  --sidebar-text:#e5e7eb;
+  --sidebar-link:#e5e7eb;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:"Inter",sans-serif;
+  transition:background-color .25s ease,color .25s ease,border-color .25s ease;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:230px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-text);
+  display:flex;
+  flex-direction:column;
+  padding:14px 12px;
+  gap:14px;
+  position:fixed;
+  inset-block:0;
+  left:0;
+  z-index:40;
+  box-shadow:var(--shadow-hard);
+  transform:translateX(-100%);
+  transition:transform .25s ease, background-color .25s ease, color .25s ease;
+}
+body.sidebar-open .sidebar{
+  transform:translateX(0);
+}
+.sidebar-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.sidebar-title-block{
+  display:flex;
+  flex-direction:column;
+}
+.sidebar-title{
+  font-family:"Outfit";
+  font-weight:800;
+  font-size:1.0rem;
+}
+.sidebar-sub{
+  font-size:.72rem;
+  color:var(--muted);
+}
+.sidebar-toggle-theme{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:1px solid rgba(148,163,184,0.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:transparent;
+  font-size:1rem;
+  color:var(--sidebar-text);
+}
+.sidebar-nav{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.sidebar-link{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 9px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:.85rem;
+  color:var(--sidebar-link);
+  cursor:pointer;
+}
+.sidebar-link span.icon{width:18px;text-align:center;}
+.sidebar-link:hover,
+.sidebar-link.active{
+  background:rgba(37,99,235,0.15);
+}
+.sidebar-footer{
+  margin-top:auto;
+  font-size:.7rem;
+  color:var(--muted);
+  border-top:1px solid rgba(148,163,184,0.3);
+  padding-top:8px;
+}
+
+.sidebar-handle{
+  position:fixed;
+  top:14px;
+  left:10px;
+  z-index:45;
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  background:#2563eb;
+  color:#f9fafb;
+  box-shadow:0 8px 20px rgba(37,99,235,0.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+}
+
+.main-wrapper{
+  flex:1;
+  min-height:100vh;
+  padding:18px 20px 24px;
+  display:flex;
+  flex-direction:column;
+}
+@media(max-width:900px){
+  .main-wrapper{ padding-top:56px; }
+}
+
+.topbar-mobile{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:48px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:"Outfit";
+  font-weight:700;
+  font-size:.9rem;
+  z-index:30;
+}
+@media(min-width:901px){ .topbar-mobile{display:none;} }
+
+.dashboard-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:12px;
+  margin-bottom:10px;
+}
+.dashboard-title{
+  font-family:"Outfit";
+  font-weight:800;
+  font-size:1.4rem;
+}
+.tag-periodo{
+  padding:4px 8px;
+  border-radius:999px;
+  background:rgba(15,23,42,0.06);
+  font-size:.75rem;
+  color:var(--muted);
+}
+
+.filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:10px;
+}
+.filter-chip{
+  display:flex;
+  flex-direction:column;
+  font-size:.75rem;
+  color:var(--muted);
+  gap:2px;
+}
+.filter-chip select{
+  min-width:110px;
+  padding:6px 9px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--card);
+  font-size:.8rem;
+  color:var(--text);
+  outline:none;
+}
+
+/* MULTI SELECT LOCAL */
+.multi-select{ position:relative; }
+#btnLocal{
+  min-width:150px;
+  padding:6px 9px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  font-size:.8rem;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.multi-panel{
+  position:absolute;
+  top:110%;
+  left:0;
+  min-width:220px;
+  background:var(--card);
+  border-radius:10px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow-soft);
+  padding:8px;
+  display:none;
+  z-index:50;
+}
+.multi-panel.open{ display:block; }
+.multi-panel-inner{
+  max-height:210px;
+  overflow:auto;
+  margin-bottom:6px;
+}
+.multi-option{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:.8rem;
+  padding:2px 0;
+}
+#applyLocal{
+  width:100%;
+  padding:5px 8px;
+  border-radius:8px;
+  border:none;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:#f9fafb;
+  font-size:.78rem;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* KPIs */
+.kpi-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:12px;
+}
+.kpi-card{
+  flex:1;
+  min-width:160px;
+  border-radius:14px;
+  padding:10px 10px;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:#f9fafb;
+  box-shadow:var(--shadow-hard);
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  align-items:center;
+  text-align:center;
+}
+.kpi-label{
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  opacity:.9;
+}
+.kpi-value{
+  font-family:"Outfit";
+  font-size:1.2rem;
+  font-weight:800;
+}
+
+/* GRÁFICOS */
+.charts-column{ display:flex; flex-direction:column; gap:12px; }
+.card-surface{
+  background:var(--card);
+  border-radius:18px;
+  padding:10px 12px 14px;
+  box-shadow:var(--shadow-soft);
+  border:1px solid rgba(148,163,184,0.2);
+}
+.card-surface h3{ margin:0 0 4px; font-size:.9rem; font-weight:700; }
+.chart-wrap{ position:relative; width:100%; height:200px; }
+.chart-wrap-top{ height:260px; }
+.charts-bottom{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+@media(max-width:900px){
+  .charts-bottom{ grid-template-columns:1fr; }
+  .chart-wrap{height:220px;}
+}
+
+.mini-summary{ margin-top:6px; font-size:.75rem; color:var(--muted); }
+footer{ margin-top:16px; font-size:.75rem; color:var(--muted); text-align:center; }
+
+.sidebar-group-btn{
+
+    width:100%;
+    background:none;
+    border:none;
+    color:inherit;
+    text-align:left;
+    padding:12px 16px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:15px;
+
+}
+
+.sidebar-group-btn:hover{
+
+    background:rgba(255,255,255,.08);
+
+}
+
+.sidebar-group{
+
+    overflow:hidden;
+    margin-left:8px;
+
+}
+
+.sidebar-group.fechado{
+
+    display:none;
+
+}
+
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title-block">
+      <span class="sidebar-title">Relatórios de Campo</span>
+      <span class="sidebar-sub">CMPC • RSS3</span>
+    </div>
+    <button id="themeToggle" class="sidebar-toggle-theme" type="button">🌙</button>
+  </div>
+  <nav class="sidebar-nav">
+
+  <!-- HIDROJATO / VÁCUO -->
+  <button class="sidebar-group-btn" onclick="toggleSidebarGroup('grupoHV')">
+      📁 Hidrojato / Vácuo
+  </button>
+
+  <div id="grupoHV" class="sidebar-group fechado">
+
+      <a href="admin.html" class="sidebar-link active">
+          <span class="icon">📋</span><span>Admin</span>
+      </a>
+
+      <a href="dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span><span>Dashboard</span>
+      </a>
+
+      <a href="planilha.html" class="sidebar-link">
+          <span class="icon">📑</span><span>Planilha</span>
+      </a>
+
+      <a href="oleo-ibcs.html" class="sidebar-link">
+          <span class="icon">🛢️</span><span>Óleo em IBCs</span>
+      </a>
+
+      <a href="abastecimento.html" class="sidebar-link">
+          <span class="icon">⛽</span><span>Abastecimento</span>
+      </a>
+
+      <a href="excluidos.html" class="sidebar-link">
+          <span class="icon">🗑️</span><span>Excluídos</span>
+      </a>
+
+      <a href="notificacoes.html" class="sidebar-link">
+          <span class="icon">🔔</span><span>Notificações</span>
+      </a>
+
+  </div>
+
+
+  <!-- AUDITORIAS -->
+  <button class="sidebar-group-btn" onclick="toggleSidebarGroup('grupoAuditoria')">
+      📁 Auditorias
+  </button>
+
+  <div id="grupoAuditoria" class="sidebar-group fechado">
+
+      <a href="admin-auditoria.html" class="sidebar-link">
+          <span class="icon">✅</span>
+          <span>Admin Auditorias</span>
+      </a>
+
+      <a href="auditorias-excluidas.html" class="sidebar-link">
+          <span class="icon">🗑️</span>
+          <span>Auditorias Excluídas</span>
+      </a>
+
+      <a href="auditoria-notificacoes.html" class="sidebar-link">
+          <span class="icon">🔔</span>
+          <span>Notificações Auditorias</span>
+      </a>
+
+  </div>
+
+</nav> 
+
+<a href="dashboard.html" class="sidebar-link active"></a>
+
+  <div class="sidebar-footer">Visão consolidada de atividades,<br>tempos e caminhões.</div>
+</aside>
+
+<button id="sidebarHandle" class="sidebar-handle" type="button">☰</button>
+<div class="topbar-mobile">Dashboard — Relatórios</div>
+
+<div class="main-wrapper">
+  <header class="dashboard-header">
+    <div class="dashboard-title">Dashboard de Atividades</div>
+    <div class="tag-periodo" id="tagPeriodo"></div>
+  </header>
+
+  
+  <div class="filters">
+
+  <div class="filter-chip">
+    <span>Ano</span>
+    <select id="filtroAno">
+      <option value="">Todos</option>
+    </select>
+  </div>
+
+  <div class="filter-chip">
+    <span>Mês</span>
+    <select id="filtroMes">
+      <option value="">Todos</option>
+      <option value="01">Jan</option>
+      <option value="02">Fev</option>
+      <option value="03">Mar</option>
+      <option value="04">Abr</option>
+      <option value="05">Mai</option>
+      <option value="06">Jun</option>
+      <option value="07">Jul</option>
+      <option value="08">Ago</option>
+      <option value="09">Set</option>
+      <option value="10">Out</option>
+      <option value="11">Nov</option>
+      <option value="12">Dez</option>
+    </select>
+  </div>
+
+    
+    <div class="filter-chip">
+      <span>Local</span>
+      <div class="multi-select">
+        <button type="button" id="btnLocal">
+          <span id="btnLocalText">Todos os locais</span>
+          <span>▾</span>
+        </button>
+        <div class="multi-panel" id="panelLocal">
+          <div class="multi-panel-inner" id="panelLocalList"></div>
+          <button type="button" id="applyLocal">Aplicar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <span class="kpi-label">Total de Atividades</span>
+      <span class="kpi-value" id="kpiAtividades">0</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Tempo Trabalhando</span>
+      <span class="kpi-value" id="kpiTrabalhando">00:00</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">DDS & Checklist</span>
+      <span class="kpi-value" id="kpiDDS">00:00</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Tempo de Espera</span>
+      <span class="kpi-value" id="kpiEspera">00:00</span>
+    </div>
+    <div class="kpi-card">
+     <span class="kpi-label">Combustível Total</span>
+     <span class="kpi-value" id="kpiCombustivel">0</span>
+    </div>
+  </div>
+
+  <section class="charts-column">
+    <div class="card-surface">
+      <h3>Atividades por Área / Local</h3>
+      <div class="chart-wrap chart-wrap-top">
+        <canvas id="chartArea"></canvas>
+      </div>
+    </div>
+    <div class="charts-bottom">
+      <div class="card-surface">
+        <h3>Tempo Trabalhado por Caminhão</h3>
+        <div class="chart-wrap">
+          <canvas id="chartTempoCaminhao"></canvas>
+        </div>
+      </div>
+      <div class="card-surface">
+        <h3>Atividades por Caminhão</h3>
+        <div class="chart-wrap">
+          <canvas id="chartCaminhao"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="mini-summary" id="miniSummary">Carregando estatísticas...</div>
+  </section>
+
+  <footer>© 2025 | Relatórios de Campo — Dashboard</footer>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+
+Chart.register(ChartDataLabels);
+  
+// ATUALIZADO PARA O NOVO PROJETO relatorio-rss3-15896
+const firebaseConfig = {
+  apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
+  authDomain: "relatorio-rss3-15896.firebaseapp.com",
+  projectId: "relatorio-rss3-15896",
+  storageBucket: "relatorio-rss3-15896.firebasestorage.app",
+  messagingSenderId: "905086909082",
+  appId: "1:905086909082:web:7535afa8dddbd7b691fd23",
+  measurementId: "G-EPGW3FGXX5"
+};
+
+if (!window.firebase.apps || window.firebase.apps.length === 0) {
+  firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+</script>
+
+<script>
+/* UI e Tema */
+const themeToggle=document.getElementById("themeToggle");
+if(localStorage.getItem("tema")==="dark"){
+  document.body.classList.add("dark");
+  themeToggle.textContent="☀️";
+}
+
+const sidebarHandle=document.getElementById("sidebarHandle");
+sidebarHandle.addEventListener("click",()=>{
+  document.body.classList.toggle("sidebar-open");
+});
+
+/* Lógica de Dados e Gráficos */
+let abastecimentos = [];
+let relatorios = [];
+let filtrados = [];
+let locaisDisponiveis = [];
+let locaisSelecionados = new Set();
+
+const filtroMesEl=document.getElementById("filtroMes");
+const btnLocal=document.getElementById("btnLocal");
+const btnLocalText=document.getElementById("btnLocalText");
+const panelLocal=document.getElementById("panelLocal");
+const panelLocalList=document.getElementById("panelLocalList");
+const applyLocalBtn=document.getElementById("applyLocal");
+const miniSummaryEl=document.getElementById("miniSummary");
+
+const kpiCombustivel=document.getElementById("kpiCombustivel");
+const filtroAnoEl=document.getElementById("filtroAno");
+const kpiAtividades=document.getElementById("kpiAtividades");
+const kpiTrabalhando=document.getElementById("kpiTrabalhando");
+const kpiDDS=document.getElementById("kpiDDS");
+const kpiEspera=document.getElementById("kpiEspera");
+
+let chartArea=null, chartCaminhao=null, chartTempoCaminhao=null;
+
+themeToggle.onclick=()=>{
+  const isDark = document.body.classList.toggle("dark");
+  themeToggle.textContent = isDark ? "☀️" : "🌙";
+  localStorage.setItem("tema", isDark ? "dark" : "light");
+
+  // 🔄 Recria os gráficos para atualizar cor dos labels
+  atualizarDashboard();
+};
+  
+/* Helpers de Tempo */
+function parseTimeToMinutes(str){
+  if(!str) return 0;
+
+  str = String(str).trim();
+
+  // Se for HH:MM
+  if(str.includes(":")){
+    const parts = str.split(":");
+    if(parts.length < 2) return 0;
+    return parseInt(parts[0],10)*60 + parseInt(parts[1],10);
+  }
+
+  // Se for número direto (ex: 30)
+  const n = parseInt(str,10);
+  return isNaN(n) ? 0 : n;
+}
+
+function diffMinutes(a, b){
+  const ma = parseTimeToMinutes(a), mb = parseTimeToMinutes(b);
+  if(ma==null || mb==null) return null;
+  return mb - ma > 0 ? mb - ma : 0;
+}
+
+function formatMinutesAsHhMm(min){
+  if(!min || min <= 0) return "00:00";
+
+  const h = Math.floor(min/60);
+  const m = min % 60;
+
+  return `${Number(h).toLocaleString("pt-BR")}:${String(m).padStart(2,"0")}`;
+}
+
+  function formatarNumero(n){
+  return Number(n).toLocaleString("pt-BR");
+}
+
+function computeTrabalho(h){
+  if(!h || !h.inicio || !h.fim) return 0;
+  let base = diffMinutes(h.inicio, h.fim);
+  // Desconto automático de 1h se houver intervalo preenchido
+  if(h.inicioIntervalo && h.fimIntervalo) base -= 60;
+  return base > 0 ? base : 0;
+}
+
+function horaParaMin(h){
+  if(!h || !h.includes(":")) return 0;
+  const [hh,mm] = h.split(":");
+  return parseInt(hh)*60 + parseInt(mm);
+}
+
+function detectarGrupo(inicio, operador){
+
+  // ADM primeiro
+  if(operador === "Bruno Ramos") return "JatoADM";
+  if(operador === "Carlos Alexandre") return "VacuoADM";
+
+  const min = horaParaMin(inicio);
+
+  // T1 → 07:30 até 12:00
+  if(min >= 450 && min <= 720) return "T1";
+
+  // T2 → 12:01 até 17:00
+  if(min >= 721 && min <= 1020) return "T2";
+
+  // T3 → 17:01 até 07:29 (virada de dia)
+  return "T3";
+}
+  
+
+/* Multi-select Locais */
+btnLocal.onclick=(e)=>{
+  e.stopPropagation();
+  panelLocal.classList.toggle("open");
+};
+window.onclick=()=>panelLocal.classList.remove("open");
+panelLocal.onclick=e=>e.stopPropagation();
+
+applyLocalBtn.onclick=()=>{
+  const checks = panelLocalList.querySelectorAll('input:checked');
+  locaisSelecionados = new Set(Array.from(checks).map(c=>c.dataset.value));
+  btnLocalText.textContent = locaisSelecionados.size === 0 ? "Todos os locais" : `${locaisSelecionados.size} selecionado(s)`;
+  panelLocal.classList.remove("open");
+  aplicaFiltros();
+};
+  
+function aplicaFiltros(){
+
+  const mes = filtroMesEl.value;
+  const ano = filtroAnoEl.value;
+
+  filtrados = relatorios.filter(r=>{
+
+    if(!r.data) return false;
+
+    let anoRegistro;
+    let mesRegistro;
+
+    if(r.data.includes("/")){
+
+      const partes = r.data.split("/");
+      mesRegistro = partes[1];
+      anoRegistro = partes[2];
+
+    }else{
+
+      anoRegistro = r.data.slice(0,4);
+      mesRegistro = r.data.slice(5,7);
+
+    }
+
+    if(ano && anoRegistro !== ano) return false;
+    if(mes && mesRegistro !== mes) return false;
+
+    return true;
+
+  });
+
+  atualizarDashboard();
+}
+
+filtroMesEl.onchange = aplicaFiltros;
+filtroAnoEl.onchange = aplicaFiltros;
+
+function atualizarDashboard(){
+   let combustivelTotal = 0;
+ kpiAtividades.textContent = formatarNumero(filtrados.length);
+  let tTrabalho=0, tDDS=0, tEspera=0;
+  const mapArea={}, mapCamCount={}, mapCamTempo={};
+
+const ddsContados = new Set();
+
+  abastecimentos.forEach(a => {
+
+  if(!a.data) return;
+
+  let anoRegistro;
+  let mesRegistro;
+
+  if(a.data.includes("/")){
+    const partes = a.data.split("/");
+    mesRegistro = partes[1];
+    anoRegistro = partes[2];
+  }else{
+    anoRegistro = a.data.slice(0,4);
+    mesRegistro = a.data.slice(5,7);
+  }
+
+  const ano = filtroAnoEl.value;
+  const mes = filtroMesEl.value;
+
+  if(ano && anoRegistro !== ano) return;
+  if(mes && mesRegistro !== mes) return;
+
+  combustivelTotal += Number(
+    a.quantidade ||
+    a.quantidadeAbastecida ||
+    a.quantidadeAbastecimento ||
+    0
+  );
+
+});
+
+filtrados.forEach(r=>{
+  const h = r.horarios || {};
+  
+
+
+  // Tempo Trabalhado
+  tTrabalho += computeTrabalho(h);
+
+ // 🔒 DDS único por dia + grupo (T1, T2, T3, ADM)
+const operador = r.operador || "";
+const inicio = h.inicio || "00:00";
+const grupo = detectarGrupo(inicio, operador);
+
+const dataBase = r.data || "semData";
+const chaveDDS = `${dataBase}_${grupo}`;
+
+if(!ddsContados.has(chaveDDS)){
+tDDS += parseTimeToMinutes(h.ddsChecklist || 0);
+  ddsContados.add(chaveDDS);
+}
+
+  // Espera = chegada até início
+  tEspera += diffMinutes(h.chegada, h.inicio) || 0;
+
+  const loc = r.local || "Não informado";
+  mapArea[loc] = (mapArea[loc]||0) + 1;
+
+  const placa = r.placa || "S/ Placa";
+  mapCamCount[placa] = (mapCamCount[placa]||0) + 1;
+  mapCamTempo[placa] = (mapCamTempo[placa]||0) + computeTrabalho(h);
+});
+  
+  kpiTrabalhando.textContent = formatMinutesAsHhMm(tTrabalho);
+  kpiDDS.textContent = formatMinutesAsHhMm(tDDS);
+  kpiEspera.textContent = formatMinutesAsHhMm(tEspera);
+  
+  renderCharts(mapArea, mapCamCount, mapCamTempo);
+  miniSummaryEl.textContent = filtrados.length > 0 ? "Dados atualizados com sucesso." : "Nenhum dado encontrado para os filtros.";
+
+ kpiCombustivel.textContent = formatarNumero(combustivelTotal) + " L";
+  
+}
+
+function getLabelColor(){
+  return document.body.classList.contains("dark")
+    ? "#ffffff"   // branco forte no dark
+    : "#111827";  // preto forte no light
+}
+  
+function renderCharts(mArea, mCamC, mCamT){
+
+  const areaOrdenada = Object.entries(mArea)
+    .sort((a,b)=> b[1] - a[1]);
+
+  const areaLabels = areaOrdenada.map(e=>e[0]);
+  const areaValues = areaOrdenada.map(e=>e[1]);
+
+  const tempoOrdenado = Object.entries(mCamT)
+    .sort((a,b)=> b[1] - a[1]);
+
+  const camTempoLabels = tempoOrdenado.map(e=>e[0]);
+  const camTempoValues = tempoOrdenado.map(e=>e[1]);
+
+  const camCountOrdenado = Object.entries(mCamC)
+    .sort((a,b)=> b[1] - a[1]);
+
+  const camCountLabels = camCountOrdenado.map(e=>e[0]);
+  const camCountValues = camCountOrdenado.map(e=>e[1]);
+
+ const setupBar = (id, labels, data) => {
+  const ctx = document.getElementById(id).getContext("2d");
+  return new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: "#2563eb",
+        borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+        color: getLabelColor(),
+        anchor: "end",
+         align: "top",
+         offset: 4,
+          font: { size: 10 }, // remove o bold
+          textStrokeWidth: 0  // remove contorno pesado
+       }
+      }
+    }
+  });
+};
+
+  const setupTempoLine = (labels, dataMinutos) => {
+    const ctx = document.getElementById("chartTempoCaminhao").getContext("2d");
+
+    return new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          data: dataMinutos,
+          borderColor: "#2563eb",
+          backgroundColor: "#2563eb",
+          tension: 0.3,
+          fill: false,
+          pointRadius: 5,
+          pointHoverRadius: 7
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+          color: getLabelColor(),
+           align: "top",
+            offset: 6,
+            font: { weight: "bold", size: 11 },
+            textStrokeColor: document.body.classList.contains("dark")
+            ? "rgba(0,0,0,0.9)"
+            : "rgba(255,255,255,0.9)",
+            textStrokeWidth: 2,
+            formatter: function(value){
+            return formatMinutesAsHhMm(value);
+           }
+          }
+         },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value){
+                return formatMinutesAsHhMm(value);
+              }
+            }
+          }
+        }
+      }
+    });
+  };
+
+  if(chartArea) chartArea.destroy();
+  if(chartCaminhao) chartCaminhao.destroy();
+  if(chartTempoCaminhao) chartTempoCaminhao.destroy();
+
+  chartArea = setupBar("chartArea", areaLabels, areaValues);
+  chartCaminhao = setupBar("chartCaminhao", camCountLabels, camCountValues);
+  chartTempoCaminhao = setupTempoLine(camTempoLabels, camTempoValues);
+}
+  
+async function carregarDados(){
+  try {
+
+ const snapComb = await db.collection("abastecimentos").get();
+abastecimentos = snapComb.docs.map(d => d.data());
+
+    const snap = await db.collection("relatoriosCampo").get();
+    relatorios = snap.docs.map(d => d.data());
+
+    const anos = ["2026","2025","2024","2023","2022"];
+
+    filtroAnoEl.innerHTML =
+      `<option value="">Todos</option>` +
+      anos.map(a => `<option value="${a}">${a}</option>`).join("");
+
+    const locs = [...new Set(relatorios.map(r=>r.local).filter(Boolean))].sort();
+
+    panelLocalList.innerHTML = locs.map(l => `
+      <label class="multi-option">
+        <input type="checkbox" data-value="${l}"> ${l}
+      </label>
+    `).join('');
+
+    aplicaFiltros();
+
+  } catch(e){
+    miniSummaryEl.textContent = "Erro ao carregar dados.";
+  }
+}
+
+carregarDados();
+  
+function toggleSidebarGroup(id){
+
+    document.getElementById(id).classList.toggle("fechado");
+
+}
+
+</script>
+</body>
+</html>
